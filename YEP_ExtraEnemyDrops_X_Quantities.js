@@ -4,14 +4,11 @@
 //=============================================================================
 
 var Imported = Imported || {};
-Imported.YEP_ExtraEnemyDrops = true;
-
-var Yanfly = Yanfly || {};
-Yanfly.EED = Yanfly.EED || {};
+Imported.YEP_ExtraEnemyDrops_X_Quantities = true;
 
 //=============================================================================
  /*:
- * @plugindesc v1.00 (Requires YEP_ExtraEnemyDrops.js) Adds quantity support to Yanfly Engine Plugins - Extra Enemy Drops.
+ * @plugindesc v1.01 (Requires YEP_ExtraEnemyDrops.js) Adds quantity support to Yanfly Engine Plugins - Extra Enemy Drops.
  * @author Nekoyoubi
  *
  * @help
@@ -51,6 +48,17 @@ Yanfly.EED = Yanfly.EED || {};
  *          Hat: 10%
  *         </Enemy Drops>
  *
+ * Gold can also now be dropped via the drop commands by using the name "G".
+ * Please note that the gold delivered is subject to other plugins' gold
+ * modifications (e.g. YEP - Enemy Levels) and may not be the amount specified.
+ * 
+ * Before: [ NOT POSSIBLE ]
+ * After:  <Drop G*50: 25%>
+ *         <Conditional G*100 Drop>
+ *          Always: +5%
+ *          Turn >= 20: +20%
+ *         </Conditional G*100 Drop>
+ *
  * ============================================================================
  * Support
  * ============================================================================
@@ -58,6 +66,10 @@ Yanfly.EED = Yanfly.EED || {};
  * First and foremost, please ensure that this plugin is located directly
  * BENEATH YEP_ExtraEnemyDrops.js.
  *
+ * A quick word of caution about using this with YEP - Enemy Levels:
+ * If you give gold as a drop (e.g. <Drop G*100: 5%>) EL will wreak havoc on
+ * the total gain after variance and level modification. You have been warned.
+ * 
  * Should this plugin not work for you for any reason, please notify me by
  * creating a Github issue, emailing me at lance-at-nekoyoubi.com, or message
  * me in any social convention you happen to see me in, but please do not
@@ -70,6 +82,10 @@ Yanfly.EED = Yanfly.EED || {};
  * Changelog
  * ============================================================================
  *
+ * Version v1.01:
+ * - added gold option via "G"-name
+ * - removed stray logging
+ *
  * Version v1.00:
  * - initial plugin
  */
@@ -77,9 +93,13 @@ Yanfly.EED = Yanfly.EED || {};
 
 Game_Enemy.prototype.makeDropItems = function() {
   return this.enemy().dropItems.reduce(function(r, di) {
-    var q = di.quantity;
-    if (q === null || q == undefined) q = 1;
+    if (di === null) return r;
+    var q = (di.quantity !== null || di.quantity != undefined) ? di.quantity : 1;
     if (di.kind > 0 && Math.random() * di.denominator < this.dropItemRate()) {
+      if (di.kind === 10) {
+        this.enemy().gold += q;
+        return r;
+      }
       var dia = [];
       for (var i = 0; i < q; i++)
         dia.push(this.itemObject(di.kind, di.dataId));
@@ -87,7 +107,7 @@ Game_Enemy.prototype.makeDropItems = function() {
     } else {
       return r;
     }
-  }.bind(this), []);
+  }.bind(this), []).concat(this.makeConditionalDropItems());
 };
 
 DataManager.processEEDNotetags1 = function(group) {
@@ -130,7 +150,10 @@ DataManager.processEEDNotetags1 = function(group) {
         var name = nq[0];
         var q = (nq.length === 2) ? parseInt(nq[1]) : 1;
         var rate = parseFloat(RegExp.$2) * 0.01;
-        if (Yanfly.ItemIdRef[name]) {
+        if (name == "G") {
+          var id = 0;
+          var kind = 10;
+        } else if (Yanfly.ItemIdRef[name]) {
           var id = Yanfly.ItemIdRef[name];
           var kind = 1;
         } else if (Yanfly.WeaponIdRef[name]) {
@@ -171,7 +194,10 @@ DataManager.processEEDNotetags1 = function(group) {
           var name = nq[0];
           var q = (nq.length === 2) ? parseInt(nq[1]) : 1;
           var rate = parseFloat(RegExp.$2) * 0.01;
-          if (Yanfly.ItemIdRef[name]) {
+          if (name == "G") {
+            var id = 0;
+            var kind = 10;
+          } else if (Yanfly.ItemIdRef[name]) {
             var id = Yanfly.ItemIdRef[name];
             var kind = 1;
           } else if (Yanfly.WeaponIdRef[name]) {
@@ -192,8 +218,10 @@ DataManager.processEEDNotetags1 = function(group) {
         var evalMode = 'none';
         var nq = String(RegExp.$1).toUpperCase().split('*');
         var name = nq[0];
-        var q = (nq.length === 2) ? parseInt(nq[1]) : 1;        
-        if (name.match(/ITEM[ ](\d+|\d+\*\d+)/i)) {
+        var q = (nq.length === 2) ? parseInt(nq[1]) : 1;
+        if (name == "G") {
+          var item = { justGold: true, quantity: q };
+        } else if (name.match(/ITEM[ ](\d+|\d+\*\d+)/i)) {
           var iq = String(RegExp.$1).split('*');
           var item = $dataItems[parseInt(iq[0])];
         } else if (name.match(/WEAPON[ ](\d+|\d+\*\d+)/i)) {
@@ -228,7 +256,6 @@ DataManager.processEEDNotetags1 = function(group) {
 
 DataManager.createEnemyDrop = function(obj, dataId, rate, kind, quantity) {
     quantity = typeof quantity !== 'undefined' ? quantity : 1;
-    console.log("createEnemyDrop / quantity: "+quantity);
     var dropItem = {
       dataId: dataId,
       denominator: 1 / rate,
@@ -236,4 +263,21 @@ DataManager.createEnemyDrop = function(obj, dataId, rate, kind, quantity) {
       quantity: quantity
     }
     obj.dropItems.push(dropItem);
+};
+
+DropManager.makeConditionalDropItems = function() {
+    var length = this._data.length;
+    if (length <= 0) return;
+    for (var i = 0; i < length; ++i) {
+      var data = this._data[i];
+      var item = data[0];
+      var conditions = data[1];
+      if (Math.random() < this.getConditionalRate(conditions)) {
+        if (item.justGold) {
+          this._enemy.enemy().gold += item.quantity;
+        } else {
+          this._drops.push(item);
+        }
+      }
+    }
 };
