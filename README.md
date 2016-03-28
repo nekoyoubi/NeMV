@@ -1,4 +1,4 @@
-# NeMV
+## NeMV
 Plugins for RPG Maker MV that I cobble together when needed.
 
 ### WTF is NeMV?  
@@ -8,16 +8,16 @@ Also, sometimes a need arises from another plugin, and I do my best to offer as 
 
 NeMV is where I will be committing those plugins for the community.
 
-## Current Plugins  
-
 ### Tags  
 This plugin allows actors, enemies, classes, skills, states, items, weapons, and armors to be tagged and those tags to be easily retrieved via script.
 
-Notetag: <tags: fresh, root, red, alchemy>  
+Notetag:  
+`<tags: fresh, root, red, alchemy>`  
 
-Script: [Object].hasTag("red")
-        [Object].addTag("crafting")
-        [Object].removeTag("fresh")
+Script:  
+`[Object].hasTag("red")`  
+`[Object].addTag("crafting")`  
+`[Object].removeTag("fresh")`  
 
 ---
 
@@ -28,18 +28,22 @@ Before, if you were to have three notetags that all gave an item, unless each of
 
 Now you can have both!
 
-Before: <Item 123: 75%>  
-After:  <Item 123*4: 75%>  
+Before:
+`<Item 123: 75%>`  
+After:
+`<Item 123*4: 75%>`  
 
-Before: <Enemy Drops>  
-         Dagger: 10%  
-         Dagger: 10%  
-         Hat: 10%  
-        </Enemy Drops>  
-After:  <Enemy Drops>  
-         Dagger*2: 10%  
-         Hat: 10%  
-        </Enemy Drops>  
+Before:  
+`<Enemy Drops>`  
+` Dagger: 10%`  
+` Dagger: 10%`  
+` Hat: 10%`  
+`</Enemy Drops>`  
+After:  
+`<Enemy Drops>`  
+` Dagger*2: 10%`  
+` Hat: 10%`  
+`</Enemy Drops>`  
 
 ---
 
