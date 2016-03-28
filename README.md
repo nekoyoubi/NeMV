@@ -11,14 +11,13 @@ NeMV is where I will be committing those plugins for the community.
 ### Tags  
 This plugin allows actors, enemies, classes, skills, states, items, weapons, and armors to be tagged and those tags to be easily retrieved via script.
 
-Notetag:  
-`<tags: fresh, root, red, alchemy>`  
+```
+Notetag: <tags: fresh, root, red, alchemy>  
 
-Script:  
-`[Object].hasTag("red")`  
-`[Object].addTag("crafting")`  
-`[Object].removeTag("fresh")`  
-
+Script: [Object].hasTag("red")  
+        [Object].addTag("crafting")  
+        [Object].removeTag("fresh")
+```
 ---
 
 ### Quantities -- Extension Plugin for [YEP - Extra Enemy Drops](http://yanfly.moe/2015/12/19/yep-47-extra-enemy-drops/)
@@ -26,25 +25,22 @@ This extension plugin adds the ability to specify a quantity of a particular ite
 
 Before, if you were to have three notetags that all gave an item, unless each of the notetags for that item was at a 100% rate, you were not guaranteed to receive any number of them when one condition was met. I've illustrated this concept with the Daggers below. The two checks were ran independently, so you may have gotten one, both, or neither of the Daggers.
 
-Now you can have both!
+Now you can have both!  
 
-Before:
-`<Item 123: 75%>`  
-After:
-`<Item 123*4: 75%>`  
+```
+Before: <Item 123: 75%>
+After:  <Item 123*4: 75%>
 
-Before:  
-`<Enemy Drops>`  
-` Dagger: 10%`  
-` Dagger: 10%`  
-` Hat: 10%`  
-`</Enemy Drops>`  
-After:  
-`<Enemy Drops>`  
-` Dagger*2: 10%`  
-` Hat: 10%`  
-`</Enemy Drops>`  
-
+Before: <Enemy Drops>  
+          Dagger: 10%  
+          Dagger: 10%  
+          Hat: 10%  
+        </Enemy Drops>  
+After:  <Enemy Drops>  
+          Dagger*2: 10%  
+          Hat: 10%  
+        </Enemy Drops>  
+```
 ---
 
 ## License
