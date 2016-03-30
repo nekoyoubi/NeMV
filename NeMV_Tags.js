@@ -11,7 +11,7 @@ NeMV.Tags = NeMV.Tags || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.00 Allows objects to be tagged and those tags to be easily retrieved and manipulated via script.
+ * @plugindesc v1.1 Allows objects to be tagged and those tags to be easily retrieved and manipulated via script.
  * @author Nekoyoubi
  *
  * @help
@@ -45,9 +45,13 @@ NeMV.Tags = NeMV.Tags || {};
  * Once your tags are added, they can be accessed in almost any location via:
  *
  * [Object].hasTag("plant")
+ *
+ * ... or wild-card the tag with an asterisk to get partial matches...
+ *
+ * [Object].hasTag("extra*")
  * 
  * This will return a boolean result indicating whether your object contains
- * that tag or not.
+ * that tag (or any tag that matches your wild-card search) or not.
  * 
  * Tags can also be added and removed programmatically by calling either:
  *
@@ -95,7 +99,10 @@ NeMV.Tags = NeMV.Tags || {};
  * Changelog
  * ============================================================================
  *
- * Version v1.00:
+ * Version 1.1:
+ * - added wild-card searches on .hasTag()
+ * 
+ * Version 1.00:
  * - initial plugin
  *
  */
@@ -129,10 +136,7 @@ NeMV.Tags.processNotetags = function(data, direct) {
 	    		obj.tags = obj.tags.concat(tagData);
 			}
 			obj.hasTag = function(tag) {
-				for (var t = 0; t < this.tags.length; t++)
-					if (this.tags[t].toUpperCase() == tag.toUpperCase())
-						return true;
-				return false;
+				return NeMV.Tags.baseHasTag(tag, this.tags);
 			};
 
 			obj.removeTag = function(tag) {
@@ -147,6 +151,29 @@ NeMV.Tags.processNotetags = function(data, direct) {
 		}
 	}
 };
+
+// BASE METHODS ---------------------------------------------------------------
+
+NeMV.Tags.baseHasTag = function(tag, tags) {
+	for (var t = 0; t < tags.length; t++) {
+		tag = tag.toUpperCase();
+		var regex = "^"+tag+"$";
+		if (tag.indexOf("*") >= 0) {
+			if (tag.charAt(0) == "*") {
+				regex = tag.replace("*","")+"$";
+			} else if (tag.charAt(tag.length-1) == "*") {
+				regex = "^"+tag.replace("*","");
+			} else {
+				regex = "^"+tag.replace("*","\\w*")+"$";
+			}
+		}
+		var currentTag = tags[t].toUpperCase();
+		var exp = new RegExp(regex, "i");
+		if (exp.exec(currentTag) !== null)
+			return true;
+	}
+	return false;
+}
 
 // OVERRIDES ------------------------------------------------------------------
 
@@ -200,10 +227,7 @@ NeMV.Tags.AnyPartyStatesHaveTag = function(tag) {
 // ENEMY PROTO ----------------------------------------------------------------
 
 Game_Enemy.prototype.hasTag = function(tag) {
-	for (var t = 0; t < this.enemy().tags.length; t++)
-		if (this.enemy().tags[t].toUpperCase() == tag.toUpperCase())
-			return true;
-	return false;
+	return NeMV.Tags.baseHasTag(tag, this.enemy().tags)
 };
 
 Game_Enemy.prototype.removeTag = function(tag) {
@@ -219,10 +243,7 @@ Game_Enemy.prototype.addTag = function(tag) {
 // ACTOR PROTO ----------------------------------------------------------------
 
 Game_Actor.prototype.hasTag = function(tag) {
-	for (var t = 0; t < this.actor().tags.length; t++)
-		if (this.actor().tags[t].toUpperCase() == tag.toUpperCase())
-			return true;
-	return false;
+	return NeMV.Tags.baseHasTag(tag, this.actor().tags);
 };
 
 Game_Actor.prototype.removeTag = function(tag) {
