@@ -12,7 +12,7 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
+ * @plugindesc v1.0.1 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
  * @author Nekoyoubi
 
  * @param ---Kill Counters---
@@ -247,6 +247,9 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * Example: fire 131, holy 132, blood 133
  * @default
  *
+ * @param --- Misc. ---
+ * @default
+ *
  * @param Debug TAC
  * @desc Whether or not to output debug information for TAC.
  * Example: true (debug) or false (no debug)
@@ -413,6 +416,12 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.0.1:
+ * - fixed broken csv params
+ * - removed stray logging
+ * - added misc header in params
+ * - fixed Debug option
+ *
  * Version 1.0:
  * - initial plugin
  *
@@ -436,7 +445,7 @@ NeMV.Tags.TAC.Param.KillCounters.push(String(NeMV.Tags.TAC.Parameters['Kill Coun
 NeMV.Tags.TAC.Param.KillCounters.push(String(NeMV.Tags.TAC.Parameters['Kill Counter 9']));
 NeMV.Tags.TAC.Param.KillCounters.push(String(NeMV.Tags.TAC.Parameters['Kill Counter 10']));
 NeMV.Tags.TAC.Param.KillCounters = NeMV.Tags.TAC.Param.KillCounters.concat(
-	String(NeMV.Tags.TAC.Parameters['Kill Counter Eval']).split(/\s*,\s*/)||[]);
+	String(NeMV.Tags.TAC.Parameters['Kill Counter CSV']).split(/\s*,\s*/)||[]);
 
 NeMV.Tags.TAC.Param.ItemUseCounters = [];
 NeMV.Tags.TAC.Param.ItemUseCounters.push(String(NeMV.Tags.TAC.Parameters['ItemUse Counter 1']));
@@ -450,7 +459,7 @@ NeMV.Tags.TAC.Param.ItemUseCounters.push(String(NeMV.Tags.TAC.Parameters['ItemUs
 NeMV.Tags.TAC.Param.ItemUseCounters.push(String(NeMV.Tags.TAC.Parameters['ItemUse Counter 9']));
 NeMV.Tags.TAC.Param.ItemUseCounters.push(String(NeMV.Tags.TAC.Parameters['ItemUse Counter 10']));
 NeMV.Tags.TAC.Param.ItemUseCounters = NeMV.Tags.TAC.Param.ItemUseCounters.concat(
-	String(NeMV.Tags.TAC.Parameters['ItemUse Counter Eval']).split(/\s*,\s*/)||[]);
+	String(NeMV.Tags.TAC.Parameters['ItemUse Counter CSV']).split(/\s*,\s*/)||[]);
 
 NeMV.Tags.TAC.Param.ItemCreateCounters = [];
 NeMV.Tags.TAC.Param.ItemCreateCounters.push(String(NeMV.Tags.TAC.Parameters['ItemCreate Counter 1']));
@@ -464,7 +473,7 @@ NeMV.Tags.TAC.Param.ItemCreateCounters.push(String(NeMV.Tags.TAC.Parameters['Ite
 NeMV.Tags.TAC.Param.ItemCreateCounters.push(String(NeMV.Tags.TAC.Parameters['ItemCreate Counter 9']));
 NeMV.Tags.TAC.Param.ItemCreateCounters.push(String(NeMV.Tags.TAC.Parameters['ItemCreate Counter 10']));
 NeMV.Tags.TAC.Param.ItemCreateCounters = NeMV.Tags.TAC.Param.ItemCreateCounters.concat(
-	String(NeMV.Tags.TAC.Parameters['ItemCreate Counter Eval']).split(/\s*,\s*/)||[]);
+	String(NeMV.Tags.TAC.Parameters['ItemCreate Counter CSV']).split(/\s*,\s*/)||[]);
 
 NeMV.Tags.TAC.Param.SkillUseCounters = [];
 NeMV.Tags.TAC.Param.SkillUseCounters.push(String(NeMV.Tags.TAC.Parameters['SkillUse Counter 1']));
@@ -478,11 +487,11 @@ NeMV.Tags.TAC.Param.SkillUseCounters.push(String(NeMV.Tags.TAC.Parameters['Skill
 NeMV.Tags.TAC.Param.SkillUseCounters.push(String(NeMV.Tags.TAC.Parameters['SkillUse Counter 9']));
 NeMV.Tags.TAC.Param.SkillUseCounters.push(String(NeMV.Tags.TAC.Parameters['SkillUse Counter 10']));
 NeMV.Tags.TAC.Param.SkillUseCounters = NeMV.Tags.TAC.Param.SkillUseCounters.concat(
-	String(NeMV.Tags.TAC.Parameters['SkillUse Counter Eval']).split(/\s*,\s*/)||[]);
+	String(NeMV.Tags.TAC.Parameters['SkillUse Counter CSV']).split(/\s*,\s*/)||[]);
 
 // INITIALIZATION -------------------------------------------------------------
 
-NeMV.Tags.TAC.Debug = Boolean(NeMV.Tags.TAC.Parameters['Debug TAC']);
+NeMV.Tags.TAC.Debug = eval(NeMV.Tags.TAC.Parameters['Debug TAC']);
 
 NeMV.Tags.TAC.KillCounters = NeMV.Tags.TAC.KillCounters || [];
 NeMV.Tags.TAC.ItemUseCounters = NeMV.Tags.TAC.ItemUseCounters || [];
@@ -594,8 +603,6 @@ Game_Interpreter.prototype.pluginCommand = function(command, args) {
 					NeMV.Tags.TAC.removeCounter(action, tag);
 					break;
 				case 'SET':
-					console.log(action);
-					console.log(tagdata);
 					NeMV.Tags.TAC.setCounter(action, tagdata);
 					break;
 			}
