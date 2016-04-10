@@ -11,7 +11,7 @@ NeMV.CTPR = NeMV.CTPR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2 Allows classes to customize their HP/MP/TP displays.
+ * @plugindesc v1.3 Allows classes to customize their HP/MP/TP displays.
  * @author Nekoyoubi
  *
  * @help
@@ -62,6 +62,9 @@ NeMV.CTPR = NeMV.CTPR || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.3:
+ * - added better integration with YEP - Skill Core
  *
  * Version 1.2:
  * - added bar recoloring support
@@ -240,3 +243,74 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
         return '';
     }
 };
+
+if (Imported.YEP_SkillCore) {
+	Window_SkillList.prototype.drawTpCost = function(skill, wx, wy, dw) {
+		var cls = $dataClasses[this._actor._classId];
+	    if (this._actor.skillTpCost(skill) <= 0) return dw;
+	    if (Yanfly.Icon.Tp > 0) {
+	    	var iw = wx + dw - Window_Base._iconWidth;
+	    	this.drawIcon(Yanfly.Icon.Tp, iw, wy + 2);
+	    	dw -= Window_Base._iconWidth + 2;
+	    }
+		if (cls.tpRecolor2 !== "") {
+			this.changeTextColor(cls.tpRecolor2);
+		} else {
+		    this.changeTextColor(this.textColor(Yanfly.Param.SCCTpTextColor));
+		}
+	    var fmt = Yanfly.Param.SCCTpFormat;
+	    var text = fmt.format(Yanfly.Util.toGroup(this._actor.skillTpCost(skill)),
+			cls.tpARename);
+	    this.contents.fontSize = Yanfly.Param.SCCTpFontSize;
+	    this.drawText(text, wx, wy, dw, 'right');
+	    var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
+	    this.resetFontSettings();
+	    return returnWidth;
+	};
+
+	Window_SkillList.prototype.drawMpCost = function(skill, wx, wy, dw) {
+		var cls = $dataClasses[this._actor._classId];
+	    if (this._actor.skillMpCost(skill) <= 0) return dw;
+	    if (Yanfly.Icon.Mp > 0) {
+	      var iw = wx + dw - Window_Base._iconWidth;
+	      this.drawIcon(Yanfly.Icon.Mp, iw, wy + 2);
+	      dw -= Window_Base._iconWidth + 2;
+	    }
+		if (cls.mpRecolor2 !== "") {
+			this.changeTextColor(cls.mpRecolor2);
+		} else {
+		    this.changeTextColor(this.textColor(Yanfly.Param.SCCMpTextColor));
+		}
+	    var fmt = Yanfly.Param.SCCMpFormat;
+	    var text = fmt.format(Yanfly.Util.toGroup(this._actor.skillMpCost(skill)),
+	    	cls.mpARename);
+	    this.contents.fontSize = Yanfly.Param.SCCMpFontSize;
+	    this.drawText(text, wx, wy, dw, 'right');
+	    var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
+	    this.resetFontSettings();
+	    return returnWidth;
+	};
+
+	Window_SkillList.prototype.drawHpCost = function(skill, wx, wy, dw) {
+		var cls = $dataClasses[this._actor._classId];
+	    if (this._actor.skillHpCost(skill) <= 0) return dw;
+	    if (Yanfly.Icon.Hp > 0) {
+	      var iw = wx + dw - Window_Base._iconWidth;
+	      this.drawIcon(Yanfly.Icon.Hp, iw, wy + 2);
+	      dw -= Window_Base._iconWidth + 2;
+	    }
+		if (cls.hpRecolor2 !== "") {
+			this.changeTextColor(cls.hpRecolor2);
+		} else {
+			this.changeTextColor(this.textColor(Yanfly.Param.SCCHpTextColor));
+		}
+		var fmt = Yanfly.Param.SCCHpFormat;
+	    var text = fmt.format(Yanfly.Util.toGroup(this._actor.skillHpCost(skill)),
+	    	cls.hpARename);
+	    this.contents.fontSize = Yanfly.Param.SCCHpFontSize;
+	    this.drawText(text, wx, wy, dw, 'right');
+	    var returnWidth = dw - this.textWidth(text) - Yanfly.Param.SCCCostPadding;
+	    this.resetFontSettings();
+	    return returnWidth;
+	};
+}
