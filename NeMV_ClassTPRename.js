@@ -11,7 +11,7 @@ NeMV.CTPR = NeMV.CTPR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0 Allows classes to customize their HP/MP/TP displays.
+ * @plugindesc v1.2 Allows classes to customize their HP/MP/TP displays.
  * @author Nekoyoubi
  *
  * @help
@@ -19,9 +19,9 @@ NeMV.CTPR = NeMV.CTPR || {};
  * Introduction
  * ============================================================================
  *
- * This plugin allows you to rename HP/MP/TP displays in your game per class. Mages
- * can now have an "Aether", Warriors a "Rage", and Faeries a "Dust" if you so
- * choose!
+ * This plugin allows you to rename and recolor the HP/MP/TP displays in your
+ * game per class. Mages can now have an "Aether", Warriors a "Rage", and
+ * Faeries a "Dust" if you so choose!
  *
  * ============================================================================
  * Usage
@@ -38,6 +38,17 @@ NeMV.CTPR = NeMV.CTPR || {};
  * <MP Rename: Rage RG>
  * <TP RENAME: Surprise !!>
  *
+ * Bar colors can also be adjusted per class via a similar notetag using the
+ * following format. Notetags are case insensitive.
+ *
+ * Class  >  Notebox  >  <HP/MP/TP Recolor: LEFTHEXCOLOR RIGHTHEXCOLOR>
+ *
+ * Examples:
+ *
+ * <hp recolor: #990909 #ff2121>
+ * <MP Recolor: #b55010 #ff5000>
+ * <TP RECOLOR: #080510 #6030bf>
+ *
  * ============================================================================
  * Support
  * ============================================================================
@@ -51,6 +62,9 @@ NeMV.CTPR = NeMV.CTPR || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.2:
+ * - added bar recoloring support
  *
  * Version 1.1:
  * - added HP and MP replacement options as well
@@ -68,7 +82,7 @@ NeMV.CTPR.init = function() {
 };
 
 NeMV.CTPR.processNotetags = function(data) {
-	var renameRegex = /<(HP|MP|TP) RENAME:[ ](.+)[ ](.+)>/i;
+	var renameRegex = /<(HP|MP|TP) (RENAME|RECOLOR):[ ](.+)[ ](.+)>/i;
 	for (var n = 1; n < data.length; n++) {
 		var obj = data[n];
 		if (obj === null || obj == 'undefined') continue;
@@ -78,24 +92,47 @@ NeMV.CTPR.processNotetags = function(data) {
 		obj.mpARename = obj.mpARename || TextManager.mpA;
 		obj.tpRename = obj.tpRename || TextManager.tp;
 		obj.tpARename = obj.tpARename || TextManager.tpA;
+		obj.hpRecolor1 = obj.hpRecolor || "";
+		obj.hpRecolor2 = obj.hpRecolor || "";
+		obj.mpRecolor1 = obj.mpRecolor || "";
+		obj.mpRecolor2 = obj.mpRecolor || "";
+		obj.tpRecolor1 = obj.tpRecolor || "";
+		obj.tpRecolor2 = obj.tpRecolor || "";
 		var notelines = obj.note.split(/[\r\n]+/);
 		for (var i = 0; i < notelines.length; i++) {
 			var line = notelines[i];
 			lineMatch = line.match(renameRegex);
 			if (lineMatch) {
-				switch (lineMatch[1].toUpperCase()) {
-					case 'HP':
-						obj.hpRename = String(lineMatch[2]);
-						obj.hpARename = String(lineMatch[3]);
-						break;
-					case 'MP':
-						obj.mpRename = String(lineMatch[2]);
-						obj.mpARename = String(lineMatch[3]);
-						break;
-					case 'TP':
-						obj.tpRename = String(lineMatch[2]);
-						obj.tpARename = String(lineMatch[3]);
-						break;
+				if (lineMatch[2].toUpperCase() == "RENAME") {
+					switch (lineMatch[1].toUpperCase()) {
+						case 'HP':
+							obj.hpRename = String(lineMatch[3]);
+							obj.hpARename = String(lineMatch[4]);
+							break;
+						case 'MP':
+							obj.mpRename = String(lineMatch[3]);
+							obj.mpARename = String(lineMatch[4]);
+							break;
+						case 'TP':
+							obj.tpRename = String(lineMatch[3]);
+							obj.tpARename = String(lineMatch[4]);
+							break;
+					}
+				} else if (lineMatch[2].toUpperCase() == "RECOLOR") {
+					switch (lineMatch[1].toUpperCase()) {
+						case 'HP':
+							obj.hpRecolor1 = String(lineMatch[3]);
+							obj.hpRecolor2 = String(lineMatch[4]);
+							break;
+						case 'MP':
+							obj.mpRecolor1 = String(lineMatch[3]);
+							obj.mpRecolor2 = String(lineMatch[4]);
+							break;
+						case 'TP':
+							obj.tpRecolor1 = String(lineMatch[3]);
+							obj.tpRecolor2 = String(lineMatch[4]);
+							break;
+					}
 				}
 			}
 		}
@@ -113,32 +150,32 @@ Scene_Boot.prototype.terminate = function() {
 Window_Base.prototype.drawActorHp = function(actor, x, y, width) {
 	var cls = $dataClasses[actor._classId];
     width = width || 186;
-    var color1 = this.hpGaugeColor1();
-    var color2 = this.hpGaugeColor2();
+    var color1 = (cls.hpRecolor1 !== "") ? cls.hpRecolor1 : this.hpGaugeColor1();
+    var color2 = (cls.hpRecolor2 !== "") ? cls.hpRecolor2 : this.hpGaugeColor2();
     this.drawGauge(x, y, width, actor.hpRate(), color1, color2);
     this.changeTextColor(this.systemColor());
     this.drawText(cls.hpARename, x, y, 44);
     this.drawCurrentAndMax(actor.hp, actor.mhp, x, y, width,
-                           this.hpColor(actor), this.normalColor());
+		this.hpColor(actor), this.normalColor());
 };
 
 Window_Base.prototype.drawActorMp = function(actor, x, y, width) {
 	var cls = $dataClasses[actor._classId];
     width = width || 186;
-    var color1 = this.mpGaugeColor1();
-    var color2 = this.mpGaugeColor2();
+	var color1 = (cls.mpRecolor1 !== "") ? cls.mpRecolor1 : this.mpGaugeColor1();
+    var color2 = (cls.mpRecolor2 !== "") ? cls.mpRecolor2 : this.mpGaugeColor2();
     this.drawGauge(x, y, width, actor.mpRate(), color1, color2);
     this.changeTextColor(this.systemColor());
     this.drawText(cls.mpARename, x, y, 44);
     this.drawCurrentAndMax(actor.mp, actor.mmp, x, y, width,
-                           this.mpColor(actor), this.normalColor());
+		this.mpColor(actor), this.normalColor());
 };
 
 Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
 	var cls = $dataClasses[actor._classId];
     width = width || 96;
-    var color1 = this.tpGaugeColor1();
-    var color2 = this.tpGaugeColor2();
+	var color1 = (cls.tpRecolor1 !== "") ? cls.tpRecolor1 : this.tpGaugeColor1();
+    var color2 = (cls.tpRecolor2 !== "") ? cls.tpRecolor2 : this.tpGaugeColor2();
     this.drawGauge(x, y, width, actor.tpRate(), color1, color2);
     this.changeTextColor(this.systemColor());
     this.drawText(cls.tpARename, x, y, 44);
