@@ -11,7 +11,7 @@ NeMV.CTPR = NeMV.CTPR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0 Allows classes to customize their TP display.
+ * @plugindesc v1.0 Allows classes to customize their HP/MP/TP displays.
  * @author Nekoyoubi
  *
  * @help
@@ -19,7 +19,7 @@ NeMV.CTPR = NeMV.CTPR || {};
  * Introduction
  * ============================================================================
  *
- * This plugin allows you to rename TP displays in your game per class. Mages
+ * This plugin allows you to rename HP/MP/TP displays in your game per class. Mages
  * can now have an "Aether", Warriors a "Rage", and Faeries a "Dust" if you so
  * choose!
  *
@@ -27,15 +27,15 @@ NeMV.CTPR = NeMV.CTPR || {};
  * Usage
  * ============================================================================
  *
- * Add a notetag to your classes that you would like to rename TP on using the
- * following format. Notetags are case insensitive.
+ * Add a notetag to your classes that you would like to rename HP/MP/TP on
+ * using the following format. Notetags are case insensitive.
  *
- * Class  >  Notebox  >  <TP Rename: NAME ABBRV>
+ * Class  >  Notebox  >  <HP/MP/TP Rename: NAME ABBRV>
  *
  * Examples:
  *
- * <TP Rename: Rage RG>
- * <tp rename: Energy EN>
+ * <hp rename: Life ♥>
+ * <MP Rename: Rage RG>
  * <TP RENAME: Surprise !!>
  *
  * ============================================================================
@@ -52,6 +52,9 @@ NeMV.CTPR = NeMV.CTPR || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.1:
+ * - added HP and MP replacement options as well
+ *
  * Version 1.0:
  * - initial plugin
  *
@@ -65,10 +68,14 @@ NeMV.CTPR.init = function() {
 };
 
 NeMV.CTPR.processNotetags = function(data) {
-	var renameRegex = /<TP RENAME:[ ](.+)[ ](.+)>/i;
+	var renameRegex = /<(HP|MP|TP) RENAME:[ ](.+)[ ](.+)>/i;
 	for (var n = 1; n < data.length; n++) {
 		var obj = data[n];
 		if (obj === null || obj == 'undefined') continue;
+		obj.hpRename = obj.hpRename || TextManager.hp;
+		obj.hpARename = obj.hpARename || TextManager.hpA;
+		obj.mpRename = obj.mpRename || TextManager.mp;
+		obj.mpARename = obj.mpARename || TextManager.mpA;
 		obj.tpRename = obj.tpRename || TextManager.tp;
 		obj.tpARename = obj.tpARename || TextManager.tpA;
 		var notelines = obj.note.split(/[\r\n]+/);
@@ -76,8 +83,20 @@ NeMV.CTPR.processNotetags = function(data) {
 			var line = notelines[i];
 			lineMatch = line.match(renameRegex);
 			if (lineMatch) {
-				obj.tpRename = String(lineMatch[1]);
-				obj.tpARename = String(lineMatch[2]);
+				switch (lineMatch[1].toUpperCase()) {
+					case 'HP':
+						obj.hpRename = String(lineMatch[2]);
+						obj.hpARename = String(lineMatch[3]);
+						break;
+					case 'MP':
+						obj.mpRename = String(lineMatch[2]);
+						obj.mpARename = String(lineMatch[3]);
+						break;
+					case 'TP':
+						obj.tpRename = String(lineMatch[2]);
+						obj.tpARename = String(lineMatch[3]);
+						break;
+				}
 			}
 		}
 	}
@@ -91,6 +110,30 @@ Scene_Boot.prototype.terminate = function() {
 
 // WINDOW PROTO ---------------------------------------------------------------
 
+Window_Base.prototype.drawActorHp = function(actor, x, y, width) {
+	var cls = $dataClasses[actor._classId];
+    width = width || 186;
+    var color1 = this.hpGaugeColor1();
+    var color2 = this.hpGaugeColor2();
+    this.drawGauge(x, y, width, actor.hpRate(), color1, color2);
+    this.changeTextColor(this.systemColor());
+    this.drawText(cls.hpARename, x, y, 44);
+    this.drawCurrentAndMax(actor.hp, actor.mhp, x, y, width,
+                           this.hpColor(actor), this.normalColor());
+};
+
+Window_Base.prototype.drawActorMp = function(actor, x, y, width) {
+	var cls = $dataClasses[actor._classId];
+    width = width || 186;
+    var color1 = this.mpGaugeColor1();
+    var color2 = this.mpGaugeColor2();
+    this.drawGauge(x, y, width, actor.mpRate(), color1, color2);
+    this.changeTextColor(this.systemColor());
+    this.drawText(cls.mpARename, x, y, 44);
+    this.drawCurrentAndMax(actor.mp, actor.mmp, x, y, width,
+                           this.mpColor(actor), this.normalColor());
+};
+
 Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
 	var cls = $dataClasses[actor._classId];
     width = width || 96;
@@ -101,6 +144,47 @@ Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
     this.drawText(cls.tpARename, x, y, 44);
     this.changeTextColor(this.tpColor(actor));
     this.drawText(actor.tp, x + width - 64, y, 64, 'right');
+};
+
+Window_BattleLog.prototype.makeHpDamageText = function(target) {
+    var result = target.result();
+    var damage = result.hpDamage;
+    var isActor = target.isActor();
+	var hpText = isActor ? $gameClasses[target.actor()._classId].hpRename : TextManager.hp;
+    var fmt;
+    if (damage > 0 && result.drain) {
+        fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
+        return fmt.format(target.name(), hpText, damage);
+    } else if (damage > 0) {
+        fmt = isActor ? TextManager.actorDamage : TextManager.enemyDamage;
+        return fmt.format(target.name(), damage);
+    } else if (damage < 0) {
+        fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
+        return fmt.format(target.name(), hpText, -damage);
+    } else {
+        fmt = isActor ? TextManager.actorNoDamage : TextManager.enemyNoDamage;
+        return fmt.format(target.name());
+    }
+};
+
+Window_BattleLog.prototype.makeMpDamageText = function(target) {
+    var result = target.result();
+    var damage = result.mpDamage;
+    var isActor = target.isActor();
+	var mpText = isActor ? $gameClasses[target.actor()._classId].mpRename : TextManager.mp;
+    var fmt;
+    if (damage > 0 && result.drain) {
+        fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
+        return fmt.format(target.name(), mpText, damage);
+    } else if (damage > 0) {
+        fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
+        return fmt.format(target.name(), mpText, damage);
+    } else if (damage < 0) {
+        fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
+        return fmt.format(target.name(), mpText, -damage);
+    } else {
+        return '';
+    }
 };
 
 Window_BattleLog.prototype.makeTpDamageText = function(target) {
