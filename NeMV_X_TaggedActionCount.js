@@ -12,7 +12,7 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0.1 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
+ * @plugindesc v1.1 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
  * @author Nekoyoubi
 
  * @param ---Kill Counters---
@@ -247,6 +247,64 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * Example: fire 131, holy 132, blood 133
  * @default
  *
+ * @param ---EventUse Counters---
+ * @default
+ *
+ * @param EventUse Counter 1
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default treasure 141
+ *
+ * @param EventUse Counter 2
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 3
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 4
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 5
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 6
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 7
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 8
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 9
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter 10
+ * @desc Define the tag to be counted and an optional variable id.
+ * Format: tag [variable] (e.g. "treasure 141")
+ * @default
+ *
+ * @param EventUse Counter CSV
+ * @desc CSV array of strings for more EventUse counters.
+ * Example: treasure 141, elder 142, puppy 143
+ * @default
+ *
  * @param --- Misc. ---
  * @default
  *
@@ -269,6 +327,7 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * - Item use (item tags)
  * - Item creation (item tags; via YEP - Item Synthesis)
  * - Party skill use (skill tags; works with items too)
+ * - Event use (event tags)
  *
  * ============================================================================
  * Usage
@@ -349,11 +408,11 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  *
  * Variables  >  [ 0401 - Heals Used ]
  *
- * Now set an "ItemCreate Action Counter" in the plugin params to this:
+ * Now set a "SkillUse Action Counter" in the plugin params to this:
  *
  * healing 401
  *
- * Now whenever you create a skill or skill-item tagged as "healing"...
+ * Now whenever you use a skill or skill-item tagged as "healing"...
  *
  * Skill/Item  >  Notebox  >  <tags: healing, holy, regen>
  *
@@ -361,13 +420,35 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  *
  * You can use this to build an element mastery system for your wizards,
  * balance your heal-bot healers with diminishing returns, or even create an
- * entire ability system around bulding a new energy pool that can be used for
+ * entire ability system around building a new energy pool that can be used for
  * ultimate/limit-break abilities.
  *
  * Please note that with the current implementation of SkillUse, some items may
  * additionally be checked. This allows for things like tag checking bombs
  * thrown at your enemies, but may also lead to collisions with ItemUse cases
  * if super-simple tags are used between skills and items.
+ *
+ * On Event Use ---------------------------------------------------------------
+ *
+ * To track how many times the player has interacted with an event with a
+ * particular tag on the event's active page, first create a variable to track
+ * the total event uses...
+ *
+ * Variables  >  [ 0501 - Treasures Found ]
+ *
+ * Now set an "EventUse Action Counter" in the plugin params to this:
+ *
+ * treasure 501
+ *
+ * Now whenever you interact with an event page tagged as "treasure"...
+ *
+ * Event  >  Comment  >  <tags: treasure, unlocked>
+ *
+ * ... the 501 variable in your game increases by one.
+ *
+ * You can use this to track looting stats, build quests where you must talk to
+ * several elders, monitor completion of areas, or even force your players to
+ * to lose the game because they've kicked too many puppies.
  *
  * Future Actions -------------------------------------------------------------
  *
@@ -376,7 +457,6 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * actions to this as often as I'm able, I thought I'd list a few here that are
  * planned for sooner rather than later.
  *
- * - Event > EventUsed (contengent on my adding event tagging to NeMV - Tags)
  * - Skill > DamageDealt/DamageTaken/HealingDealt/HealingTaken
  * - State > TurnsAfflicted/StateGiven/StateTaken
  *
@@ -415,6 +495,9 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.1:
+ * - added EventUse
  *
  * Version 1.0.1:
  * - fixed broken csv params
@@ -489,6 +572,20 @@ NeMV.Tags.TAC.Param.SkillUseCounters.push(String(NeMV.Tags.TAC.Parameters['Skill
 NeMV.Tags.TAC.Param.SkillUseCounters = NeMV.Tags.TAC.Param.SkillUseCounters.concat(
 	String(NeMV.Tags.TAC.Parameters['SkillUse Counter CSV']).split(/\s*,\s*/)||[]);
 
+NeMV.Tags.TAC.Param.EventUseCounters = [];
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 1']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 2']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 3']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 4']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 5']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 6']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 7']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 8']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 9']));
+NeMV.Tags.TAC.Param.EventUseCounters.push(String(NeMV.Tags.TAC.Parameters['EventUse Counter 10']));
+NeMV.Tags.TAC.Param.EventUseCounters = NeMV.Tags.TAC.Param.EventUseCounters.concat(
+	String(NeMV.Tags.TAC.Parameters['EventUse Counter CSV']).split(/\s*,\s*/)||[]);
+
 // INITIALIZATION -------------------------------------------------------------
 
 NeMV.Tags.TAC.Debug = eval(NeMV.Tags.TAC.Parameters['Debug TAC']);
@@ -497,6 +594,7 @@ NeMV.Tags.TAC.KillCounters = NeMV.Tags.TAC.KillCounters || [];
 NeMV.Tags.TAC.ItemUseCounters = NeMV.Tags.TAC.ItemUseCounters || [];
 NeMV.Tags.TAC.ItemCreateCounters = NeMV.Tags.TAC.ItemCreateCounters || [];
 NeMV.Tags.TAC.SkillUseCounters = NeMV.Tags.TAC.SkillUseCounters || [];
+NeMV.Tags.TAC.EventUseCounters = NeMV.Tags.TAC.EventUseCounters || [];
 NeMV.Tags.TAC.MiscCounters = NeMV.Tags.TAC.MiscCounters || [];
 
 NeMV.Tags.TAC.init = function() {
@@ -504,6 +602,7 @@ NeMV.Tags.TAC.init = function() {
 	this.paramsToArray(this.Param.ItemUseCounters, "ItemUse");
 	this.paramsToArray(this.Param.ItemCreateCounters, "ItemCreate");
 	this.paramsToArray(this.Param.SkillUseCounters, "SkillUse");
+	this.paramsToArray(this.Param.EventUseCounters, "EventUse");
 };
 
 NeMV.Tags.TAC.paramsToArray = function(params, type) {
@@ -530,6 +629,8 @@ NeMV.Tags.TAC.getCounterArray = function(type) {
 			return this.ItemCreateCounters;
 		case "SKILLUSE":
 			return this.SkillUseCounters;
+		case "EVENTUSE":
+			return this.EventUseCounters;
 		default:
 			return this.MiscCounters;
 	}
@@ -587,7 +688,7 @@ NeMV.Tags.TAC.Game_Interpreter_pluginCommand = Game_Interpreter.prototype.plugin
 Game_Interpreter.prototype.pluginCommand = function(command, args) {
 	NeMV.Tags.TAC.Game_Interpreter_pluginCommand.call(this, command, args);
 	if (command.toUpperCase() == "TAC") {
-		var regex = /(?:TAC)\s(ADD|REMOVE|SET)\s(KILL|ITEMUSE|ITEMCREATE|SKILLUSE)\s(([a-z_-]+)((?:\s)(\d+))?)/i;
+		var regex = /(?:TAC)\s(ADD|REMOVE|SET)\s(KILL|ITEMUSE|ITEMCREATE|SKILLUSE|EVENTUSE)\s(([a-z_-]+)((?:\s)(\d+))?)/i;
 		var data = (command+" "+args.join(" ")).toUpperCase().match(regex);
 		if (data !== null) {
 			var comm = data[1];
@@ -660,6 +761,18 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 		for (var i = 0; i < NeMV.Tags.TAC.SkillUseCounters.length; i++) {
 			var counter = NeMV.Tags.TAC.SkillUseCounters[i];
 			if (this.item().hasTag(counter.tag)) counter.inc();
+		}
+	}
+};
+
+NeMV.Tags.TAC.Game_Event_start = Game_Event.prototype.start;
+Game_Event.prototype.start = function() {
+    NeMV.Tags.TAC.Game_Event_start.call(this);
+	var e = this.event();
+	if (this._locked) {
+		for (var i = 0; i < NeMV.Tags.TAC.EventUseCounters.length; i++) {
+			var counter = NeMV.Tags.TAC.EventUseCounters[i];
+			if (e.hasTag(counter.tag)) counter.inc();
 		}
 	}
 };
