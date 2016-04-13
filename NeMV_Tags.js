@@ -11,7 +11,7 @@ NeMV.Tags = NeMV.Tags || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2 Allows objects to be tagged and those tags to be easily retrieved and manipulated via script.
+ * @plugindesc v1.2.1 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
  * @author Nekoyoubi
  *
  * @help
@@ -62,7 +62,11 @@ NeMV.Tags = NeMV.Tags || {};
  *
  * [Object].removeTag("fresh")
  *
- * Note: Removing a tag that does not exist will NOT throw an error.
+ * Removing a tag that does not exist will NOT throw an error.
+ *
+ * Events Note: Due to the volatile nature of events, adding and removing tags
+ * dynamically is not currently possible. Tags on events do change between
+ * the events pages; they simply cannot be addTag()/removeTag()'d.
  *
  * ----------------------------------------------------------------------------
  *
@@ -99,6 +103,9 @@ NeMV.Tags = NeMV.Tags || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.2.1:
+ * - fixed up event tagging a bit
  *
  * Version 1.2:
  * - added event tagging!
@@ -179,6 +186,35 @@ NeMV.Tags.baseHasTag = function(tag, tags) {
 			return true;
 	}
 	return false;
+};
+
+NeMV.Tags.baseEventSetup = function(gameEvent) {
+	if (gameEvent === null ||
+		gameEvent === undefined ||
+		gameEvent.event === undefined) return;
+	var e = gameEvent.event();
+	e.tags = [];
+	e.hasTag = function(tag) {
+		return NeMV.Tags.baseHasTag(tag, this.tags);
+	};
+	e.removeTag = function(tag) {
+		var index = this.tags.indexOf(tag.toUpperCase());
+		if (index > -1) this.tags.splice(index, 1);
+	};
+	e.addTag = function(tag) {
+		this.removeTag(tag.toUpperCase());
+		this.tags.push(tag.toUpperCase());
+	};
+	var list = gameEvent.list();
+	for (var l = 0; l < list.length; l++) {
+		if (list[l].code == 108) {
+			var tagLine = list[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
+			if (tagLine !== null && tagLine !== undefined) {
+				var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
+				e.tags = tagData;
+			}
+		}
+	}
 };
 
 // OVERRIDES ------------------------------------------------------------------
@@ -276,65 +312,44 @@ Game_Item.prototype.addTag = function(tag) {
 
 // EVENT PROTO ----------------------------------------------------------------
 
+Game_Event.prototype.hasTag = function(tag) {
+	return NeMV.Tags.baseHasTag(tag, this.event().tags);
+};
+
+// Game_Event.prototype.removeTag = function(tag) {
+// 	var index = this.event().tags.indexOf(tag.toUpperCase());
+// 	if (index > -1) this.event().tags.splice(index, 1);
+// };
+//
+// Game_Event.prototype.addTag = function(tag) {
+// 	this.event().removeTag(tag.toUpperCase());
+// 	this.event().tags.push(tag.toUpperCase());
+// };
+
 NeMV.Tags.Game_Event_initialize = Game_Event.prototype.initialize;
 Game_Event.prototype.initialize = function(mapId, eventId) {
 	NeMV.Tags.Game_Event_initialize.call(this, mapId, eventId);
-	var e = this.event();
-	var tagsRegex = /<(?:TAGS):[ ](.*)>/i;
-	if (e !== null && e !== undefined) {
-		e.tags = e.tags || [];
-		e.hasTag = function(tag) {
-			return NeMV.Tags.baseHasTag(tag, this.tags);
-		};
-		e.removeTag = function(tag) {
-			var index = this.tags.indexOf(tag.toUpperCase());
-			if (index > -1) this.tags.splice(index, 1);
-		};
-		e.addTag = function(tag) {
-			this.removeTag(tag.toUpperCase());
-			this.tags.push(tag.toUpperCase());
-		};
-		var p = this.page();
-		for (var l = 0; l < p.list.length; l++) {
-			if (p.list[l].code == 108) {
-				var tagLine = p.list[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
-				if (tagLine !== null && tagLine !== undefined) {
-					var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
-					e.tags = tagData;
-				}
-			}
-		}
-	}
+	NeMV.Tags.baseEventSetup(this);
 };
 
-Game_Event.prototype.start = function() {
-    var list = this.list();
-    if (list && list.length > 1) {
-        this._starting = true;
-        if (this.isTriggerIn([0,1,2])) {
-            this.lock();
-			var e = this.event();
-			var p = this.page();
-			e.hasTag = function(tag) {
-				return NeMV.Tags.baseHasTag(tag, this.tags);
-			};
-			e.removeTag = function(tag) {
-				var index = this.tags.indexOf(tag.toUpperCase());
-				if (index > -1) this.tags.splice(index, 1);
-			};
-			e.addTag = function(tag) {
-				this.removeTag(tag.toUpperCase());
-				this.tags.push(tag.toUpperCase());
-			};
-			for (var l = 0; l < p.list.length; l++) {
-				if (p.list[l].code == 108) {
-					var tagLine = p.list[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
-					if (tagLine !== null && tagLine !== undefined) {
-						var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
-						e.tags = tagData;
-					}
-				}
-			}
-        }
-    }
+NeMV.Tags.Game_Event_lock = Game_Event.prototype.lock;
+Game_Event.prototype.lock = function() {
+	NeMV.Tags.Game_Event_lock.call(this);
+	NeMV.Tags.baseEventSetup(this);
+};
+
+NeMV.Tags.Game_Event_refresh = Game_Event.prototype.refresh;
+Game_Event.prototype.refresh = function() {
+	NeMV.Tags.Game_Event_refresh.call(this);
+	NeMV.Tags.baseEventSetup(this);
+};
+
+// MAP PROTO ------------------------------------------------------------------
+
+NeMV.Tags.Scene_Map_onMapLoaded = Scene_Map.prototype.onMapLoaded;
+Scene_Map.prototype.onMapLoaded = function() {
+	NeMV.Tags.Scene_Map_onMapLoaded.call(this);
+	$gameMap.events().forEach(function(event) {
+		NeMV.Tags.baseEventSetup(event);
+	});
 };

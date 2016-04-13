@@ -498,6 +498,7 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  *
  * Version 1.1:
  * - added EventUse
+ * - cleaned up some bad help content
  *
  * Version 1.0.1:
  * - fixed broken csv params
