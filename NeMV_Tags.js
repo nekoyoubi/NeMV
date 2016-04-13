@@ -11,7 +11,7 @@ NeMV.Tags = NeMV.Tags || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2.1 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
+ * @plugindesc v1.2.2 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
  * @author Nekoyoubi
  *
  * @help
@@ -82,6 +82,10 @@ NeMV.Tags = NeMV.Tags || {};
  *
  * ... will return true if a party actor has a state tagged as "weapon".
  *
+ * NeMV.Tags.EventsThatHaveTag("harvestable")
+ *
+ * ... will return a collection of Game_Event objects tagged as "harvestable".
+ *
  * ============================================================================
  * Support
  * ============================================================================
@@ -103,6 +107,9 @@ NeMV.Tags = NeMV.Tags || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.2.2:
+ * - added EventsThatHaveTag() utility method
  *
  * Version 1.2.1:
  * - fixed up event tagging a bit
@@ -260,6 +267,16 @@ NeMV.Tags.AnyPartyStatesHaveTag = function(tag) {
 		return $gameActors.actor(b).states().reduce(function(c,d) {
 			return c||d.hasTag(tag);}, a);
 	}, false);
+};
+
+NeMV.Tags.EventsThatHaveTag = function(tag) {
+	var events = [];
+	$gameMap.events().forEach(function(e) {
+		if (e.event().hasTag(tag))
+			events.push(e);
+	});
+	if (events.length === 0) return null;
+	else return events;
 };
 
 // ENEMY PROTO ----------------------------------------------------------------
