@@ -11,16 +11,8 @@ NeMV.SR = NeMV.SR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
+ * @plugindesc v1.0.1 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
  * @author Nekoyoubi
- *
- * @param --- Misc. ---
- * @default
- *
- * @param Debug State Resources
- * @desc Whether or not to output debug information for State Resources.
- * Example: true (debug) or false (no debug)
- * @default false
  *
  * @help
  * ============================================================================
@@ -86,11 +78,15 @@ NeMV.SR = NeMV.SR || {};
  * creating a GitHub issue, emailing me at lance-at-nekoyoubi.com, or message
  * me in any social convention you happen to see me in.
  *
- * Thanks, and happy... resourcing?
+ * Thanks, and happy stacking!
  *
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.0.1:
+ * - removed placebo debug param
+ * - added verbose actor protos for compatibility
  *
  * Version 1.0:
  * - initial plugin
@@ -312,7 +308,7 @@ Game_BattlerBase.prototype.canPaySkillSRCost = function(skill) {
 		cost = this.skillSRCost(skill, srid);
 		if (cost > 0) {
 			can &= (this.isStateAffected(srid));
-			can &= this.getSR(srid) >= cost;
+			can &= this.getStateResource(srid) >= cost;
 		}
 	}
     return can;
@@ -335,7 +331,7 @@ Game_BattlerBase.prototype.paySkillSRCost = function(skill) {
 			for (var s = 0; s < states.length; s++) {
 				var state = states[s];
 				if (state.id === ress[r][0])
-					this.adjustSR(state.id, -cost);
+					this.adjustStateResource(state.id, -cost);
 			}
 		}
 	}
@@ -373,7 +369,8 @@ Window_Base.prototype.drawActorIconsTurns = function(actor, wx, wy, ww) {
 Window_Base.prototype.drawStateTurns = function(actor, state, wx, wy) {
 	var isResource = NeMV.SR.Resources.reduce(function(a,b){return a||b[0]===state.id;},false);
     if (!state.showTurns && !isResource) return;
-    var turns = isResource ? actor.getSR(state.id) : actor.stateTurns(state.id);
+	console.log(actor);
+    var turns = isResource ? actor.getStateResource(state.id) : actor.stateTurns(state.id);
     if (!isResource && turns !== 0 && !turns) return;
     turns = Yanfly.Util.toGroup(Math.ceil(turns));
     wx += state.turnBufferX;
@@ -420,11 +417,11 @@ Window_SkillList.prototype.drawSRCost = function(skill, wx, wy, dw) {
 
 // ACTOR SR PROTOS ------------------------------------------------------------
 
-Game_BattlerBase.prototype.getMaxSR = function(resource) {
+Game_BattlerBase.prototype.getMaxStateResource = function(resource) {
 	return this.stateResources.reduce(function(a,b){return a>0?a:b[0]===resource?b[2]:0;},0);
 };
 
-Game_BattlerBase.prototype.setMaxSR = function(resource, amount) {
+Game_BattlerBase.prototype.setMaxStateResource = function(resource, amount) {
 	for (var r = 0; r < this.stateResources.length; r++) {
 		if (this.stateResources[r][0] === resource) {
 			this.stateResources[r][2] = Math.max(amount, 0);
@@ -433,27 +430,33 @@ Game_BattlerBase.prototype.setMaxSR = function(resource, amount) {
 	}
 };
 
-Game_BattlerBase.prototype.getSR= function(resource) {
+Game_BattlerBase.prototype.getStateResource = function(resource) {
 	return this.stateResources.reduce(function(a,b){return a>0?a:b[0]===resource?b[1]:0;},0);
 };
 
-Game_BattlerBase.prototype.setSR= function(resource, amount) {
+Game_BattlerBase.prototype.setStateResource = function(resource, amount) {
 	for (var r = 0; r < this.stateResources.length; r++) {
 		if (this.stateResources[r][0] === resource) {
-			this.stateResources[r][1] = Math.min(Math.max(amount,0),this.getMaxSR(resource));
+			this.stateResources[r][1] = Math.min(Math.max(amount,0),this.getMaxStateResource(resource));
 			return;
 		}
 	}
 };
 
-Game_BattlerBase.prototype.adjustSR= function(resource, amount) {
+Game_BattlerBase.prototype.adjustStateResource = function(resource, amount) {
 	for (var r = 0; r < this.stateResources.length; r++) {
 		if (this.stateResources[r][0] === resource) {
-			this.stateResources[r][1] = Math.min(Math.max(amount+this.getSR(resource),0),this.getMaxSR(resource));
+			this.stateResources[r][1] = Math.min(Math.max(amount+this.getStateResource(resource),0),this.getMaxStateResource(resource));
 			return;
 		}
 	}
 };
+
+Game_BattlerBase.prototype.getMaxSR = Game_BattlerBase.prototype.getMaxStateResource;
+Game_BattlerBase.prototype.setMaxSR = Game_BattlerBase.prototype.setMaxStateResource;
+Game_BattlerBase.prototype.getSR = Game_BattlerBase.prototype.getStateResource;
+Game_BattlerBase.prototype.setSR = Game_BattlerBase.prototype.setStateResource;
+Game_BattlerBase.prototype.adjustSR = Game_BattlerBase.prototype.adjustStateResource;
 
 // SETUP AND INITIALIZATION ---------------------------------------------------
 
