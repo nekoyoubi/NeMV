@@ -11,8 +11,16 @@ NeMV.SR = NeMV.SR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0.1 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
+ * @plugindesc v1.1 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
  * @author Nekoyoubi
+ *
+ * @param ---Compatibility---
+ * @default
+ *
+ * @param Subclass Passive States
+ * @desc Should subclasses grant their passive states?
+ * Example: true (subclass passives) or false (no subclass passives)
+ * @default true
  *
  * @help
  * ============================================================================
@@ -84,6 +92,9 @@ NeMV.SR = NeMV.SR || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.1:
+ * - added subclass auto passive states
+ *
  * Version 1.0.1:
  * - removed placebo debug param
  * - added verbose actor protos for compatibility
@@ -95,6 +106,9 @@ NeMV.SR = NeMV.SR || {};
 //=============================================================================
 
 // NeMV.SR INITIALIZATION -----------------------------------------------------
+
+NeMV.SR.Parameters = PluginManager.parameters('NeMV_StateResources');
+NeMV.SR.SubclassPassives = eval(NeMV.SR.Parameters['Subclass Passive States']);
 
 NeMV.SR.Resources = [];
 
@@ -369,7 +383,6 @@ Window_Base.prototype.drawActorIconsTurns = function(actor, wx, wy, ww) {
 Window_Base.prototype.drawStateTurns = function(actor, state, wx, wy) {
 	var isResource = NeMV.SR.Resources.reduce(function(a,b){return a||b[0]===state.id;},false);
     if (!state.showTurns && !isResource) return;
-	console.log(actor);
     var turns = isResource ? actor.getStateResource(state.id) : actor.stateTurns(state.id);
     if (!isResource && turns !== 0 && !turns) return;
     turns = Yanfly.Util.toGroup(Math.ceil(turns));
@@ -485,3 +498,24 @@ Scene_Boot.prototype.terminate = function() {
 	NeMV.SR.Scene_Boot_terminate.call(this);
 	NeMV.SR.init();
 };
+
+if (Imported.YEP_AutoPassiveStates && Imported.YEP_X_Subclass && NeMV.SR.SubclassPassives) {
+	Game_Actor.prototype.passiveStatesRaw = function() {
+	    if (this._passiveStatesRaw !== undefined) return this._passiveStatesRaw;
+	    var array = Game_BattlerBase.prototype.passiveStatesRaw.call(this);
+	    array = array.concat(this.getPassiveStateData(this.actor()));
+	    array = array.concat(this.getPassiveStateData(this.currentClass()));
+		if (this.subclass !== undefined && this.subclass() !== null)
+	    	array = array.concat(this.getPassiveStateData(this.subclass()));
+	    for (var i = 0; i < this.equips().length; ++i) {
+	      var equip = this.equips()[i];
+	      array = array.concat(this.getPassiveStateData(equip));
+	    }
+	    for (var i = 0; i < this._skills.length; ++i) {
+	      var skill = $dataSkills[this._skills[i]];
+	      array = array.concat(this.getPassiveStateData(skill));
+	    }
+	    this._passiveStatesRaw = array.filter(Yanfly.Util.onlyUnique)
+	    return this._passiveStatesRaw;
+	};
+}
