@@ -11,8 +11,16 @@ NeMV.SR = NeMV.SR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.1 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
+ * @plugindesc v1.2 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
  * @author Nekoyoubi
+ *
+ * @param ---Display---
+ * @default
+ *
+ * @param Resource Count Color
+ * @desc What RMMV color should the resource amount be?
+ * Default: 0 (white)
+ * @default 0
  *
  * @param ---Compatibility---
  * @default
@@ -48,6 +56,30 @@ NeMV.SR = NeMV.SR || {};
  *
  * Note that the last example will attempt to only use the state's icon to show
  * the resource cost.
+ *
+ * The following notetags can also be used to adjust or set the resources upon
+ * starting or exiting a battle. Please note that these tags make use of
+ * positive string values (e.g. +10) for increasing the resource, negative
+ * values (e.g. -10) for decreasing them, and integers (e.g. 10) for setting
+ * the amount explicitly. Also, please be sure that these lines are placed
+ * below the initial/setup <Resource> tag.
+ *
+ * State  >  Notebox  >  <RESOURCE PHASE: [+/-]AMOUNT>
+ *
+ * For example...
+ *
+ * <Resource BattleStart: 100>
+ * <RESOURCE BATTLEEND: 0>
+ * <resource battlestart: +10>
+ * <resource battleend: -10>
+ *
+ * In the first example all party members will have their resource set to 100.
+ * In the second, the resource will be zeroed out for all party members on the
+ * completion of battle. The third example will add 10 to whatever amount
+ * (while still being capped to the defined maximum) each individual party
+ * member has at the start of a new battle. The last example will force the
+ * party members to each lose 10 of the resource (while not falling below
+ * zero).
  *
  * Step 2 ---------------------------------------------------------------------
  *
@@ -92,6 +124,11 @@ NeMV.SR = NeMV.SR || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.2:
+ * - added battle timing resource adjustments
+ * - fixed resource amounts being tied together for all actors
+ * - added customizable resource count color param
+ *
  * Version 1.1:
  * - added subclass auto passive states
  *
@@ -109,6 +146,7 @@ NeMV.SR = NeMV.SR || {};
 
 NeMV.SR.Parameters = PluginManager.parameters('NeMV_StateResources');
 NeMV.SR.SubclassPassives = eval(NeMV.SR.Parameters['Subclass Passive States']);
+NeMV.SR.ResourceCountColor = Number(NeMV.SR.Parameters['Resource Count Color']);
 
 NeMV.SR.Resources = [];
 
@@ -118,6 +156,7 @@ NeMV.SR.init = function() {
 
 NeMV.SR.processStateNotetags = function(data) {
 	var resourceTag = /<(?:RESOURCE (\d+)(?:[,\s]*(\d+))?(?:[,\s]*(\w+))?)>/i;
+	var timingTag = /<(?:RESOURCE (BATTLESTART|BATTLEEND):\s?([\+\-]?\d+))>/i;
 	for (var n = 1; n < data.length; n++) {
 		var obj = data[n];
 		if (obj === null || obj === undefined) continue;
@@ -125,14 +164,28 @@ NeMV.SR.processStateNotetags = function(data) {
 		var notelines = obj.note.split(/[\r\n]+/);
 		for (var i = 0; i < notelines.length; i++) {
 			var line = notelines[i];
-			lineMatch = line.match(resourceTag);
-			if (lineMatch) {
+			resourceMatch = line.match(resourceTag);
+			timingMatch = line.match(timingTag);
+			if (resourceMatch) {
 				NeMV.SR.Resources.push([
 					obj.id,
-					parseInt(lineMatch[1]),
-					parseInt(lineMatch[2]) ? parseInt(lineMatch[2]) : 100,
-					lineMatch[3] !== null && lineMatch[3] !== undefined ? lineMatch[3] : ""
+					parseInt(resourceMatch[1]),
+					parseInt(resourceMatch[2]) ? parseInt(resourceMatch[2]) : 100,
+					resourceMatch[3] !== null && resourceMatch[3] !== undefined ? resourceMatch[3] : "",
+					null, // BattleStart (4)
+					null // BattleEnd (5)
 				]);
+			}
+			if (timingMatch) {
+				for (var r = 0; r < NeMV.SR.Resources.length; r++) {
+					var res = NeMV.SR.Resources[r];
+					if (res[0] == obj.id) {
+						switch (timingMatch[1].toUpperCase()) {
+							case "BATTLESTART" : res[4] = timingMatch[2]; break;
+							case "BATTLEEND" : res[5] = timingMatch[2]; break;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -389,7 +442,7 @@ Window_Base.prototype.drawStateTurns = function(actor, state, wx, wy) {
     wx += state.turnBufferX;
     wy += state.turnBufferY;
     this.changePaintOpacity(true);
-    this.changeTextColor(this.textColor(state.turnColor));
+    this.changeTextColor(this.textColor(isResource ? NeMV.SR.ResourceCountColor : state.turnColor));
     this.contents.fontSize = state.turnFontSize;
     this.drawText(isNaN(turns) ? 0 : turns, wx, wy, Window_Base._iconWidth, state.turnAlign);
     this.resetFontSettings();
@@ -428,7 +481,7 @@ Window_SkillList.prototype.drawSRCost = function(skill, wx, wy, dw) {
 	return dw;
 };
 
-// ACTOR SR PROTOS ------------------------------------------------------------
+// ACTOR/ENEMY SR PROTOS ------------------------------------------------------
 
 Game_BattlerBase.prototype.getMaxStateResource = function(resource) {
 	return this.stateResources.reduce(function(a,b){return a>0?a:b[0]===resource?b[2]:0;},0);
@@ -476,21 +529,13 @@ Game_BattlerBase.prototype.adjustSR = Game_BattlerBase.prototype.adjustStateReso
 NeMV.SR.Game_BattlerBase_initialize = Game_BattlerBase.prototype.initialize;
 Game_BattlerBase.prototype.initialize = function() {
     NeMV.SR.Game_BattlerBase_initialize.call(this);
-	if (this.stateResources === null || this.stateResources === undefined) {
-		this.stateResources = [];
-		for (var r = 0; r < NeMV.SR.Resources.length; r++) {
-			this.stateResources.push(NeMV.SR.Resources[r]);
-		}
-	}
+	this.stateResources = JSON.parse(JSON.stringify(NeMV.SR.Resources));
 };
 
 NeMV.SR.Game_BattlerBase_recoverAll = Game_BattlerBase.prototype.recoverAll;
 Game_BattlerBase.prototype.recoverAll = function() {
     NeMV.SR.Game_BattlerBase_recoverAll.call(this);
-	this.stateResources = [];
-	for (var r = 0; r < NeMV.SR.Resources.length; r++) {
-		this.stateResources.push(NeMV.SR.Resources[r]);
-	}
+	//TODO: Add reset
 };
 
 NeMV.SR.Scene_Boot_terminate = Scene_Boot.prototype.terminate;
@@ -498,6 +543,8 @@ Scene_Boot.prototype.terminate = function() {
 	NeMV.SR.Scene_Boot_terminate.call(this);
 	NeMV.SR.init();
 };
+
+// SUBCLASS PASSIVE STATES ----------------------------------------------------
 
 if (Imported.YEP_AutoPassiveStates && Imported.YEP_X_Subclass && NeMV.SR.SubclassPassives) {
 	Game_Actor.prototype.passiveStatesRaw = function() {
@@ -511,11 +558,51 @@ if (Imported.YEP_AutoPassiveStates && Imported.YEP_X_Subclass && NeMV.SR.Subclas
 	      var equip = this.equips()[i];
 	      array = array.concat(this.getPassiveStateData(equip));
 	    }
-	    for (var i = 0; i < this._skills.length; ++i) {
-	      var skill = $dataSkills[this._skills[i]];
+	    for (var s = 0; s < this._skills.length; ++s) {
+	      var skill = $dataSkills[this._skills[s]];
 	      array = array.concat(this.getPassiveStateData(skill));
 	    }
-	    this._passiveStatesRaw = array.filter(Yanfly.Util.onlyUnique)
+	    this._passiveStatesRaw = array.filter(Yanfly.Util.onlyUnique);
 	    return this._passiveStatesRaw;
 	};
 }
+
+// BATTLEMANAGER OVERRIDES ----------------------------------------------------
+
+NeMV.SR.processTiming = function(type) {
+	for (var r = 0; r < NeMV.SR.Resources.length; r++) {
+		var res = NeMV.SR.Resources[r];
+		var adj = res[type];
+		if (adj !== null) {
+			if (BattleManager._phase == "start" || BattleManager._phase == "battleEnd") {
+				for (var m = 0; m < $gameParty.members().length; m++) {
+					if (adj.indexOf("+") >= 0) {
+						$gameParty.members()[m].adjustStateResource(res[0], parseInt(adj.substr(1), 10));
+					} else if (adj.indexOf("-") >= 0) {
+						$gameParty.members()[m].adjustStateResource(res[0], parseInt(adj, 10));
+					} else {
+						$gameParty.members()[m].setStateResource(res[0], parseInt(adj, 10));
+					}
+				}
+			}
+		}
+	}
+};
+
+NeMV.SR.setBattleStart = function() { NeMV.SR.processTiming(4); };
+NeMV.SR.setBattleEnd = function() { NeMV.SR.processTiming(5); };
+
+NeMV.SR.BattleManager_update = BattleManager.update;
+BattleManager.update = function() {
+    if (!this.isBusy() && !this.updateEvent()) {
+        switch (this._phase) {
+        case 'start':
+            NeMV.SR.setBattleStart();
+            break;
+        case 'battleEnd':
+            NeMV.SR.setBattleEnd();
+            break;
+        }
+    }
+	NeMV.SR.BattleManager_update.call(this);
+};
