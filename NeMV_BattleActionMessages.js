@@ -11,7 +11,7 @@ NeMV.BAM = NeMV.BAM || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0 Allows your skills to have customizable battle log text.
+ * @plugindesc v1.01 Allows your skills to have customizable battle log text.
  * @author Nekoyoubi
  *
  * @help
@@ -61,6 +61,9 @@ NeMV.BAM = NeMV.BAM || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.0.1:
+ * - added "s" and "v" variables to the eval
+ *
  * Version 1.0:
  * - initial plugin
  *
@@ -77,6 +80,8 @@ NeMV.BAM.processNotetags = function(subject, item) {
 		var skill = item;
 		var user = subject;
 		var a = subject;
+		var s = $gameSwitches._data;
+		var v = $gameVariables._data;
 		eval(bamMatch[1]);
 		item.message1 = m1;
 		item.message2 = m2;
