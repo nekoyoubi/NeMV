@@ -11,7 +11,7 @@ NeMV.BAM = NeMV.BAM || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.01 Allows your skills to have customizable battle log text.
+ * @plugindesc v1.0.1 Allows your skills to have customizable battle log text.
  * @author Nekoyoubi
  *
  * @help
