@@ -11,7 +11,7 @@ NeMV.Tags = NeMV.Tags || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2.2 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
+ * @plugindesc v1.2.3 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
  * @author Nekoyoubi
  *
  * @help
@@ -107,6 +107,9 @@ NeMV.Tags = NeMV.Tags || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.2.3:
+ * - added better event loading after issues with some blank states
  *
  * Version 1.2.2:
  * - added EventsThatHaveTag() utility method
@@ -212,9 +215,10 @@ NeMV.Tags.baseEventSetup = function(gameEvent) {
 		this.removeTag(tag.toUpperCase());
 		this.tags.push(tag.toUpperCase());
 	};
-	var list = gameEvent.list();
+	var list = e.pages[e._pageIndex|0].list;
 	for (var l = 0; l < list.length; l++) {
 		if (list[l].code == 108) {
+			console.log(list[l]);
 			var tagLine = list[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
 			if (tagLine !== null && tagLine !== undefined) {
 				var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
