@@ -218,7 +218,6 @@ NeMV.Tags.baseEventSetup = function(gameEvent) {
 	var list = e.pages[e._pageIndex|0].list;
 	for (var l = 0; l < list.length; l++) {
 		if (list[l].code == 108) {
-			console.log(list[l]);
 			var tagLine = list[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
 			if (tagLine !== null && tagLine !== undefined) {
 				var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
