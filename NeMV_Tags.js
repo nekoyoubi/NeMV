@@ -11,7 +11,7 @@ NeMV.Tags = NeMV.Tags || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.3.0 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
+ * @plugindesc v1.3.1 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
  * @author Nekoyoubi
  *
  * @help
@@ -56,13 +56,15 @@ NeMV.Tags = NeMV.Tags || {};
  *
  * Tags can also be added and removed programmatically by calling either:
  *
- * [Object].addTag("spoiled")
+ * [Object].addTag("good")
  *
  * ... or...
  *
- * [Object].removeTag("fresh")
+ * [Object].removeTag("bad")
  *
  * Removing a tag that does not exist will NOT throw an error.
+ *
+ * Tag addition and removal with these methods may be deprecated in the future.
  *
  * Events Note: Due to the volatile nature of events, adding and removing tags
  * dynamically is not currently possible. Tags on events do change between
@@ -74,15 +76,15 @@ NeMV.Tags = NeMV.Tags || {};
  * scan the party for tags on items they either possess or have equipped, or
  * tags on states they may have active.
  *
- * NeMV.Tags.AnyPartyItemsHaveTag("magical")
+ * NeMV.Tags.partyItemsWithTag("magical")
  *
  * ... will return true if the party possesses any items tagged as "magical".
  *
- * NeMV.Tags.AnyPartyStatesHaveTag("weapon")
+ * NeMV.Tags.partyStatesWithTag("weapon")
  *
  * ... will return true if a party actor has a state tagged as "weapon".
  *
- * NeMV.Tags.EventsThatHaveTag("harvestable")
+ * NeMV.Tags.eventsWithTag("harvestable")
  *
  * ... will return a collection of Game_Event objects tagged as "harvestable".
  *
@@ -107,6 +109,10 @@ NeMV.Tags = NeMV.Tags || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.3.1:
+ * - re-fixed the previously fixed bug that was ever so recently unfixed
+ * - deprecated old utility methods
  *
  * Version 1.3.0:
  * - moved event tagging off of underlying event and put it on Game_Event
@@ -219,12 +225,14 @@ NeMV.Tags.baseEventSetup = function(gameEvent) {
 		this.removeTag(tag.toUpperCase());
 		this.tags.push(tag.toUpperCase());
 	};
-	for (var l = 0; l < gameEvent.list().length; l++) {
-		if (gameEvent.list()[l].code == 108) {
-			var tagLine = gameEvent.list()[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
-			if (tagLine !== null && tagLine !== undefined) {
-				var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
-				gameEvent.tags = tagData;
+	if (gameEvent.page() && gameEvent.list()) {
+		for (var l = 0; l < gameEvent.list().length; l++) {
+			if (gameEvent.list()[l].code == 108) {
+				var tagLine = gameEvent.list()[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
+				if (tagLine !== null && tagLine !== undefined) {
+					var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
+					gameEvent.tags = tagData;
+				}
 			}
 		}
 	}
@@ -240,7 +248,7 @@ Scene_Boot.prototype.terminate = function() {
 
 // UTILITIES ------------------------------------------------------------------
 
-NeMV.Tags.AnyPartyItemsHaveTag = function(tag) {
+NeMV.Tags.partyItemsWithTag = function(tag) {
 	if (Imported.YEP_ItemCore) {
 		return $gameParty._actors.reduce(function(a,b) {
 			return $gameActors.actor(b)._equips.reduce(function(c,d) {
@@ -268,14 +276,14 @@ NeMV.Tags.AnyPartyItemsHaveTag = function(tag) {
 	}
 };
 
-NeMV.Tags.AnyPartyStatesHaveTag = function(tag) {
+NeMV.Tags.partyStatesWithTag = function(tag) {
 	return $gameParty._actors.reduce(function(a,b) {
 		return $gameActors.actor(b).states().reduce(function(c,d) {
 			return c||d.hasTag(tag);}, a);
 	}, false);
 };
 
-NeMV.Tags.EventsThatHaveTag = function(tag) {
+NeMV.Tags.eventsWithTag = function(tag) {
 	var events = [];
 	$gameMap.events().forEach(function(e) {
 		if (e.hasTag(tag))
@@ -284,6 +292,11 @@ NeMV.Tags.EventsThatHaveTag = function(tag) {
 	if (events.length === 0) return null;
 	else return events;
 };
+
+// deprecated; please use new methods
+NeMV.Tags.AnyItemsHaveTag = NeMV.Tags.partyItemsWithTag;
+NeMV.Tags.AnyPartyStatesHaveTag = NeMV.Tags.partyStatesWithTag;
+NeMV.Tags.EventsThatHaveTag = NeMV.Tags.eventsWithTag;
 
 // ENEMY PROTO ----------------------------------------------------------------
 
