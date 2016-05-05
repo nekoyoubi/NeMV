@@ -12,7 +12,7 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.1 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
+ * @plugindesc v1.1.1 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
  * @author Nekoyoubi
 
  * @param ---Kill Counters---
@@ -496,6 +496,9 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.1.1:
+ * - adjusted event tag counting for Tags 1.3.0.
+ *
  * Version 1.1:
  * - added EventUse
  * - cleaned up some bad help content
@@ -769,11 +772,10 @@ Game_Action.prototype.applyItemUserEffect = function(target) {
 NeMV.Tags.TAC.Game_Event_start = Game_Event.prototype.start;
 Game_Event.prototype.start = function() {
     NeMV.Tags.TAC.Game_Event_start.call(this);
-	var e = this.event();
 	if (this._locked) {
 		for (var i = 0; i < NeMV.Tags.TAC.EventUseCounters.length; i++) {
 			var counter = NeMV.Tags.TAC.EventUseCounters[i];
-			if (e.hasTag(counter.tag)) counter.inc();
+			if (this.hasTag(counter.tag)) counter.inc();
 		}
 	}
 };

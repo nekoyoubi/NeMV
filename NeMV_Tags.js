@@ -11,7 +11,7 @@ NeMV.Tags = NeMV.Tags || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2.3 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
+ * @plugindesc v1.3.0 Allows objects and events to be tagged and those tags to be easily retrieved and manipulated via script.
  * @author Nekoyoubi
  *
  * @help
@@ -108,6 +108,10 @@ NeMV.Tags = NeMV.Tags || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.3.0:
+ * - moved event tagging off of underlying event and put it on Game_Event
+ * - corrected improper event page tagging issues
+ *
  * Version 1.2.3:
  * - added better event loading after issues with some blank states
  *
@@ -117,17 +121,17 @@ NeMV.Tags = NeMV.Tags || {};
  * Version 1.2.1:
  * - fixed up event tagging a bit
  *
- * Version 1.2:
+ * Version 1.2.0:
  * - added event tagging!
  *
  * Version 1.1.1:
  * - added Game_Item protos
  * - reorderd object additions
  *
- * Version 1.1:
+ * Version 1.1.0:
  * - added wild-card searches on .hasTag()
  *
- * Version 1.00:
+ * Version 1.0.0:
  * - initial plugin
  *
  */
@@ -203,25 +207,24 @@ NeMV.Tags.baseEventSetup = function(gameEvent) {
 		gameEvent === undefined ||
 		gameEvent.event === undefined) return;
 	var e = gameEvent.event();
-	e.tags = [];
-	e.hasTag = function(tag) {
+	gameEvent.tags = [];
+	gameEvent.hasTag = function(tag) {
 		return NeMV.Tags.baseHasTag(tag, this.tags);
 	};
-	e.removeTag = function(tag) {
+	gameEvent.removeTag = function(tag) {
 		var index = this.tags.indexOf(tag.toUpperCase());
 		if (index > -1) this.tags.splice(index, 1);
 	};
-	e.addTag = function(tag) {
+	gameEvent.addTag = function(tag) {
 		this.removeTag(tag.toUpperCase());
 		this.tags.push(tag.toUpperCase());
 	};
-	var list = e.pages[e._pageIndex|0].list;
-	for (var l = 0; l < list.length; l++) {
-		if (list[l].code == 108) {
-			var tagLine = list[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
+	for (var l = 0; l < gameEvent.list().length; l++) {
+		if (gameEvent.list()[l].code == 108) {
+			var tagLine = gameEvent.list()[l].parameters[0].toUpperCase().match(/<TAGS:[ ](.+)>/gi);
 			if (tagLine !== null && tagLine !== undefined) {
 				var tagData = tagLine[0].match(/<TAGS:[ ](.+)>/i)[1].match(/\w+/gi);
-				e.tags = tagData;
+				gameEvent.tags = tagData;
 			}
 		}
 	}
@@ -275,7 +278,7 @@ NeMV.Tags.AnyPartyStatesHaveTag = function(tag) {
 NeMV.Tags.EventsThatHaveTag = function(tag) {
 	var events = [];
 	$gameMap.events().forEach(function(e) {
-		if (e.event().hasTag(tag))
+		if (e.hasTag(tag))
 			events.push(e);
 	});
 	if (events.length === 0) return null;
