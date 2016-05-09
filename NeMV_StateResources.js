@@ -11,7 +11,7 @@ NeMV.SR = NeMV.SR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
+ * @plugindesc v1.2.1 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
  * @author Nekoyoubi
  *
  * @param ---Display---
@@ -124,6 +124,9 @@ NeMV.SR = NeMV.SR || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.2.1:
+ * - adjusted the resource notetag to not be concerned with ":"s
+ *
  * Version 1.2:
  * - added battle timing resource adjustments
  * - fixed resource amounts being tied together for all actors
@@ -155,7 +158,7 @@ NeMV.SR.init = function() {
 };
 
 NeMV.SR.processStateNotetags = function(data) {
-	var resourceTag = /<(?:RESOURCE (\d+)(?:[,\s]*(\d+))?(?:[,\s]*(\w+))?)>/i;
+	var resourceTag = /<(?:RESOURCE:? (\d+)(?:[,\s]*(\d+))?(?:[,\s]*(\w+))?)>/i;
 	var timingTag = /<(?:RESOURCE (BATTLESTART|BATTLEEND):\s?([\+\-]?\d+))>/i;
 	for (var n = 1; n < data.length; n++) {
 		var obj = data[n];
