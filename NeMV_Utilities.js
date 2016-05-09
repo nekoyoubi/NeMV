@@ -11,7 +11,7 @@ var nemv = NeMV;
 
 //=============================================================================
  /*:
- * @plugindesc v1.0.0 Some helpful functions for making your notetag evals and event scripts easier to read and write.
+ * @plugindesc v1.1.0 Some helpful functions for making your notetag evals and event scripts easier to read and write.
  * @author Nekoyoubi
  *
  * @help
@@ -34,10 +34,10 @@ var nemv = NeMV;
  *
  * ----------------------------- ! IMPORTANT ! --------------------------------
  * Not everything in this plugin is documented. Some methods have yet to get
- * write-ups, so don't be affraid to dig in and see what everything does. I
- * will be updating this and its documentation as often as I am able, but this
- * will more than likely grow in function faster than I can write entries for
- * it. As such it will probably remain in an alpha-state (doesn't mean "scary",
+ * write-ups, so don't be afraid to dig in and see what everything does. I will
+ * be updating this and its documentation as often as I am able, but this will
+ * more than likely grow in function faster than I can write entries for it.
+ * As such it will probably remain in an alpha-state (doesn't mean "scary",
  * just not "feature-complete") for quite some time.
  * ----------------------------- ! IMPORTANT ! --------------------------------
  *
@@ -82,6 +82,11 @@ var nemv = NeMV;
  * Changelog
  * ============================================================================
  *
+ * Version 1.1.0:
+ * - added new battler functions for getting field-level lists of battlers
+ * - added Array.each() alias
+ * - added aliases for Tags utility methods
+ *
  * Version 1.0.0:
  * - initial plugin
  *
@@ -93,6 +98,10 @@ var nemv = NeMV;
 NeMV.clamp = function (value, min, max) {
 	return Math.max(Math.min(value, max), min);
 };
+
+// ARRAY HELPERS --------------------------------------------------------------
+
+Array.prototype.each = Array.prototype.forEach;
 
 // RANDOM HELPERS -------------------------------------------------------------
 
@@ -208,10 +217,28 @@ if (Imported.NeMV_Tags) {
 		return NeMV.allWithTag("ARMOR", tag);
 	};
 
+	NeMV.partyItemsWithTag = NeMV.Tags.partyItemsWithTag;
+	NeMV.partyStatesWithTag = NeMV.Tags.partyStatesWithTag;
+	NeMV.eventsWithTag = NeMV.Tags.eventsWithTag;
+
 }
 
 // MAP HELPERS ----------------------------------------------------------------
 
 NeMV.distance = function(x1, y1, x2, y2) {
 	return Math.sqrt((x1-x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+};
+
+// BATTLE HELPERS -------------------------------------------------------------
+
+NeMV.allBattlers = function () {
+	return $gameParty.members().concat($gameTroop.members());
+};
+
+NeMV.aliveBattlers = function () {
+	return $gameParty.aliveMembers().concat($gameTroop.aliveMembers());
+};
+
+NeMV.deadBattlers = function () {
+	return $gameParty.deadMembers().concat($gameTroop.deadMembers());
 };
