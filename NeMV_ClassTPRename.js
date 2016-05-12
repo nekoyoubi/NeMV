@@ -63,6 +63,9 @@ NeMV.CTPR = NeMV.CTPR || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.3.1:
+ * - even better integration with YEP - Skill Core (bar swapping fix)
+ *
  * Version 1.3:
  * - added better integration with YEP - Skill Core
  *
@@ -185,6 +188,41 @@ Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
     this.changeTextColor(this.tpColor(actor));
     this.drawText(actor.tp, x + width - 64, y, 64, 'right');
 };
+
+if (Imported.YEP_SkillCore) {
+	Yanfly.Skill.Window_Base_drawActorHp = Window_Base.prototype.drawActorHp;
+	Window_Base.prototype.drawActorHp = function(actor, x, y, width) {
+	    if (actor.gauge1() === 'HP') {
+	      Yanfly.Skill.Window_Base_drawActorHp.call(this, actor, x, y, width);
+	    } else if (actor.gauge1() === 'MP') {
+	      Yanfly.Skill.Window_Base_drawActorMp.call(this, actor, x, y, width);
+	    } else if (actor.gauge1() === 'TP') {
+	      Yanfly.Skill.Window_Base_drawActorTp.call(this, actor, x, y, width);
+	    }
+	};
+
+	Yanfly.Skill.Window_Base_drawActorMp = Window_Base.prototype.drawActorMp;
+	Window_Base.prototype.drawActorMp = function(actor, x, y, width) {
+	    if (actor.gauge2() === 'HP') {
+	      Yanfly.Skill.Window_Base_drawActorHp.call(this, actor, x, y, width);
+	    } else if (actor.gauge2() === 'MP') {
+	      Yanfly.Skill.Window_Base_drawActorMp.call(this, actor, x, y, width);
+	    } else if (actor.gauge2() === 'TP') {
+	      Yanfly.Skill.Window_Base_drawActorTp.call(this, actor, x, y, width);
+	    }
+	};
+
+	Yanfly.Skill.Window_Base_drawActorTp = Window_Base.prototype.drawActorTp;
+	Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
+	    if (actor.gauge3() === 'HP') {
+	      Yanfly.Skill.Window_Base_drawActorHp.call(this, actor, x, y, width);
+	    } else if (actor.gauge3() === 'MP') {
+	      Yanfly.Skill.Window_Base_drawActorMp.call(this, actor, x, y, width);
+	    } else if (actor.gauge3() === 'TP') {
+	      Yanfly.Skill.Window_Base_drawActorTp.call(this, actor, x, y, width);
+	    }
+	};
+}
 
 Window_BattleLog.prototype.makeHpDamageText = function(target) {
     var result = target.result();

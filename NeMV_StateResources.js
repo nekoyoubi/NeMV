@@ -11,7 +11,7 @@ NeMV.SR = NeMV.SR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2.1 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
+ * @plugindesc v1.2.2 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
  * @author Nekoyoubi
  *
  * @param ---Display---
@@ -124,6 +124,9 @@ NeMV.SR = NeMV.SR || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.2.2:
+ * - adjusted the skill cost notetag to not be concerned with ":"s (similar to v1.2.1)
+ *
  * Version 1.2.1:
  * - adjusted the resource notetag to not be concerned with ":"s
  *
@@ -203,8 +206,8 @@ DataManager.processSkillNotetags = function(group) {
   var note4 = /<(?:TP COST):[ ](\d+)([%％])>/i;
   var note5 = /<(?:HP COST):[ ](\d+)>/i;
   var note6 = /<(?:HP COST):[ ](\d+)([%％])>/i;
-  var noteSR1 = /<(?:(?:SR|STATE RESOURCE|STATE|RESOURCE) (\d+) COST):\s?(\d+)>/i;
-  var noteSR2 = /<(?:(?:SR|STATE RESOURCE|STATE|RESOURCE) (\d+) COST):\s?(\d+)([%％])>/i;
+  var noteSR1 = /<(?:(?:SR|STATE RESOURCE|STATE|RESOURCE) (\d+) COST):?\s?(\d+)>/i;
+  var noteSR2 = /<(?:(?:SR|STATE RESOURCE|STATE|RESOURCE) (\d+) COST):?\s?(\d+)([%％])>/i;
   var note7a = /<(?:HIDE IF LEARNED SKILL):[ ]*(\d+(?:\s*,\s*\d+)*)>/i;
   var note7b = /<(?:HIDE IF LEARNED SKILL):[ ](\d+)[ ](?:THROUGH|to)[ ](\d+)>/i;
   var note8a = /<(?:HIDE IN BATTLE|hide during battle)>/i;
