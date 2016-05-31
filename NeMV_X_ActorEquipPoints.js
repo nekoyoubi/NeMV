@@ -12,7 +12,7 @@ NeMV.Tags.AEP = NeMV.Tags.AEP || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0 (Requires NeMV_Tags.js & YEP_X_EquipRequirements.js) Provides a point-based equipment system with the help of NeMV Tags and YEP - Equip Requirements.
+ * @plugindesc v1.0.1 (Requires NeMV_Tags.js & YEP_X_EquipRequirements.js) Provides a point-based equipment system with the help of NeMV Tags and YEP - Equip Requirements.
  * @author Nekoyoubi
  *
  * @param --- Equipment Tags ---
@@ -151,6 +151,9 @@ NeMV.Tags.AEP = NeMV.Tags.AEP || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.0.1:
+ * - removed unintentional YEP - Item Core requirement
  *
  * Version 1.0:
  * - initial plugin
@@ -354,10 +357,14 @@ Game_Interpreter.prototype.pluginCommand = function(command, args) {
 
 // EQUIP REQUIREMENTS INTEGRATION ---------------------------------------------
 
+NeMV.Tags.AEP.getBaseItem = function(item) {
+	return (Imported.YEP_ItemCore) ? DataManager.getBaseItem(item) : item;
+};
+
 if (Imported.YEP_X_EquipRequirements) {
 	Game_BattlerBase.prototype.meetEquipPointsRequirements = function(item) {
 		var actor = this.actor();
-		var baseItem = (item.hasTag === undefined) ? DataManager.getBaseItem(item) : item;
+		var baseItem = (item.hasTag === undefined) ? NeMV.Tags.AEP.getBaseItem(item) : item;
 		var epa = NeMV.Tags.AEP.EquipPoints;
 		var safe = true;
 		for (var ep = 0; ep < epa.length; ep++) {
@@ -374,7 +381,7 @@ if (Imported.YEP_X_EquipRequirements) {
 	Game_BattlerBase.prototype.meetAllEquipRequirements = function(item) {
 		if (!item.equipRequirements) {
 			if (item.baseItemId) {
-				item.equipRequirements = DataManager.getBaseItem(item).equipRequirements;
+				item.equipRequirements = NeMV.Tags.AEP.getBaseItem(item).equipRequirements;
 			} else {
 	    		return true;
 	    	}
