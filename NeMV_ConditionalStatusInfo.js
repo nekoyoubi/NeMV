@@ -11,7 +11,7 @@ NeMV.CSI = NeMV.CSI || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0.0 (Requires YEP_StatusMenuCore.js) Allows for conditional status window elements based on switches.
+ * @plugindesc v1.0.1 (Requires YEP_StatusMenuCore.js) Allows for conditional status window elements based on switches.
  * @author Nekoyoubi
  *
  * @help
@@ -50,7 +50,7 @@ NeMV.CSI = NeMV.CSI || {};
  * 52 and 53 will display regardless. Please note that Yanfly's range option
  * for this notetag is unsupported. It will continue to function, but will not
  * attempt to parse conditionals.
- * 
+ *
  * ============================================================================
  * Support
  * ============================================================================
@@ -64,6 +64,9 @@ NeMV.CSI = NeMV.CSI || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.0.1:
+ * - fixed a regex issue that was preventing multiples from being processed
  *
  * Version 1.0.0:
  * - initial plugin
@@ -142,28 +145,28 @@ if (Imported.YEP_X_ActorVariables) {
 	    for (var i = 0; i < notedata.length; i++) {
 	      var line = notedata[i];
 	      if (line.match(note1a)) {
-	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(':','.') + ']');
+	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(/\:/g,'.') + ']');
 	        obj.varColumn1 = obj.varColumn1.concat(array);
 	      } else if (line.match(note1b)) {
 	        var range = Yanfly.Util.getRange(parseInt(RegExp.$1),
 	          parseInt(RegExp.$2));
 	        obj.varColumn1 = obj.varColumn1.concat(range);
 	      } else if (line.match(note2a)) {
-	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(':','.') + ']');
+	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(/\:/g,'.') + ']');
 	        obj.varColumn2 = obj.varColumn2.concat(array);
 	      } else if (line.match(note2b)) {
 	        var range = Yanfly.Util.getRange(parseInt(RegExp.$1),
 	          parseInt(RegExp.$2));
 	        obj.varColumn2 = obj.varColumn2.concat(range);
 	      } else if (line.match(note3a)) {
-	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(':','.') + ']');
+	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(/\:/g,'.') + ']');
 	        obj.varColumn3 = obj.varColumn3.concat(array);
 	      } else if (line.match(note3b)) {
 	        var range = Yanfly.Util.getRange(parseInt(RegExp.$1),
 	          parseInt(RegExp.$2));
 	        obj.varColumn3 = obj.varColumn3.concat(range);
 	      } else if (line.match(note4a)) {
-	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(':','.') + ']');
+	        var array = JSON.parse('[' + String(RegExp.$1.match(/(\d+(?::\d+)?)/g)).replace(/\:/g,'.') + ']');
 	        obj.varColumn4 = obj.varColumn4.concat(array);
 	      } else if (line.match(note4b)) {
 	        var range = Yanfly.Util.getRange(parseInt(RegExp.$1),
