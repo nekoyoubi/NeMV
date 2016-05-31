@@ -12,7 +12,7 @@ NeMV.Tags.AEP = NeMV.Tags.AEP || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.0.1 (Requires NeMV_Tags.js & YEP_X_EquipRequirements.js) Provides a point-based equipment system with the help of NeMV Tags and YEP - Equip Requirements.
+ * @plugindesc v1.0.2 (Requires NeMV_Tags.js & YEP_X_EquipRequirements.js) Provides a point-based equipment system with the help of NeMV Tags and YEP - Equip Requirements.
  * @author Nekoyoubi
  *
  * @param --- Equipment Tags ---
@@ -151,6 +151,9 @@ NeMV.Tags.AEP = NeMV.Tags.AEP || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.0.2:
+ * - fixed a bug where the available equip point threshold needed to be one below
  *
  * Version 1.0.1:
  * - removed unintentional YEP - Item Core requirement
@@ -372,7 +375,7 @@ if (Imported.YEP_X_EquipRequirements) {
 				var max = actor.getEquipPointsMax(epa[ep].type);
 				var current = actor.getEquipPoints(epa[ep].type);
 				var ipoints = baseItem.getEquipPointsValue(epa[ep].type);
-				safe &= (max > (current + ipoints));
+				safe &= (max >= (current + ipoints));
 			}
 		}
 		return safe;
