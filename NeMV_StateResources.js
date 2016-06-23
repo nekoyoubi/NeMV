@@ -11,16 +11,8 @@ NeMV.SR = NeMV.SR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.2.2 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
+ * @plugindesc v1.3.0 (Requires YEP_BuffsStatesCore.js & YEP_SkillCore.js) Grants resource pools in the form of states.
  * @author Nekoyoubi
- *
- * @param ---Display---
- * @default
- *
- * @param Resource Count Color
- * @desc What RMMV color should the resource amount be?
- * Default: 0 (white)
- * @default 0
  *
  * @param ---Compatibility---
  * @default
@@ -124,6 +116,10 @@ NeMV.SR = NeMV.SR || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.3.0:
+ * - changed State Resources to use Yanfly's new State Counters instead of turns
+ * - removed SR customizable counter color, as it uses the formatting specified in YEP - B&S Core
+ *
  * Version 1.2.2:
  * - adjusted the skill cost notetag to not be concerned with ":"s (similar to v1.2.1)
  *
@@ -152,7 +148,6 @@ NeMV.SR = NeMV.SR || {};
 
 NeMV.SR.Parameters = PluginManager.parameters('NeMV_StateResources');
 NeMV.SR.SubclassPassives = eval(NeMV.SR.Parameters['Subclass Passive States']);
-NeMV.SR.ResourceCountColor = Number(NeMV.SR.Parameters['Resource Count Color']);
 
 NeMV.SR.Resources = [];
 
@@ -412,48 +407,39 @@ Game_BattlerBase.prototype.paySkillSRCost = function(skill) {
 
 // STATE RESOURCE ACTOR DRAWING -----------------------------------------------
 
-Window_Base.prototype.drawActorIconsTurns = function(actor, wx, wy, ww) {
-    var iw = Window_Base._iconWidth;
-    var icons = actor.allIcons().slice(0, Math.floor(ww / iw));
-    var max = icons.length;
-    var shownMax = Math.floor(ww / iw);
-    for (var i = 0; i < actor.states().length; ++i) {
-      if (shownMax <= 0) break;
-      var state = actor.states()[i];
-      if (state.iconIndex <= 0) continue;
-      if (state.autoRemovalTiming > 0 ||
-		  NeMV.SR.Resources.reduce(function(a,b){return a||b[0]===state.id;},false)) {
-        this.drawStateTurns(actor, state, wx, wy);
-      }
-      wx += iw;
-      --shownMax;
-    }
-    for (var b = 0; b < 8; ++b) {
-      if (shownMax <= 0) break;
-      if (actor._buffs[b] === 0) continue;
-      this.drawBuffTurns(actor, b, wx, wy);
-      wx += iw;
-      --shownMax;
-    }
+Window_Base.prototype.drawStateCounter = function(actor, state, wx, wy) {
+	var isResource = NeMV.SR.Resources.reduce(function(a,b){return a||b[0]===state.id;},false);
+	if (!state.showCounter && !isResource) return;
+    var value = isResource ? actor.getStateResource(state.id) : actor.getStateCounter(state.id);
+    if (value === undefined) return;
+    var settings = state.stateCounterSettings;
+    value = Yanfly.Util.toGroup(value);
+    wx += settings.bufferX;
+    wy += settings.bufferY;
+    this.changePaintOpacity(true);
+    this.changeTextColor(this.textColor(settings.color));
+    this.contents.fontSize = settings.size;
+    this.drawText(value, wx, wy, Window_Base._iconWidth, settings.align);
     this.resetFontSettings();
     this.resetTextColor();
 };
 
-Window_Base.prototype.drawStateTurns = function(actor, state, wx, wy) {
+Sprite_StateIcon.prototype.drawStateCounter = function(state) {
 	var isResource = NeMV.SR.Resources.reduce(function(a,b){return a||b[0]===state.id;},false);
-    if (!state.showTurns && !isResource) return;
-    var turns = isResource ? actor.getStateResource(state.id) : actor.stateTurns(state.id);
-    if (!isResource && turns !== 0 && !turns) return;
-    turns = Yanfly.Util.toGroup(Math.ceil(turns));
-    wx += state.turnBufferX;
-    wy += state.turnBufferY;
-    this.changePaintOpacity(true);
-    this.changeTextColor(this.textColor(isResource ? NeMV.SR.ResourceCountColor : state.turnColor));
-    this.contents.fontSize = state.turnFontSize;
-    this.drawText(isNaN(turns) ? 0 : turns, wx, wy, Window_Base._iconWidth, state.turnAlign);
-    this.resetFontSettings();
-    this.resetTextColor();
+    var value = isResource ? this._battler.getStateResource(state.id) : this._battler.getStateCounter(state.id);
+    if (value === undefined || (!state.showCounter && !isResource)) return;
+    var settings = state.stateCounterSettings;
+    value = Yanfly.Util.toGroup(value);
+    var wx = settings.bufferX;
+    var wy = settings.bufferY - 2;
+    var ww = Window_Base._iconWidth;
+    var wh = Window_Base.prototype.lineHeight.call(this);
+    var contents = this._turnCounterSprite.bitmap;
+    contents.fontSize = settings.size;
+    contents.textColor = this.textColor(settings.color);
+    contents.drawText(value, wx, wy, ww, wh, settings.align);
 };
+
 
 // SKILL COST DRAWING ---------------------------------------------------------
 
