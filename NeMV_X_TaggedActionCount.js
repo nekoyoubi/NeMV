@@ -12,7 +12,7 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.1.1 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
+ * @plugindesc v1.1.2 (Requires NeMV_Tags.js) Allows the counting of certain actions to be tied to tags.
  * @author Nekoyoubi
 
  * @param ---Kill Counters---
@@ -496,6 +496,9 @@ NeMV.Tags.TAC = NeMV.Tags.TAC || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.1.2:
+ * - fixed enemies not processing drops
+ *
  * Version 1.1.1:
  * - adjusted event tag counting for Tags 1.3.0.
  *
@@ -715,14 +718,16 @@ Game_Interpreter.prototype.pluginCommand = function(command, args) {
 	}
 };
 
-NeMV.Tags.TAC.Game_Enemy_makeDropItems = Game_Enemy.prototype.makeDropItems;
+NeMV.Tags.TAC.Game_Enemy_makeDropItems = Imported.YEP_ExtraEnemyDrops
+	? Yanfly.EED.Game_Enemy_makeDropItems
+	: Game_Enemy.prototype.makeDropItems;
 Game_Enemy.prototype.makeDropItems = function() {
 	var enemy = this.enemy();
 	for (var k = 0; k < NeMV.Tags.TAC.KillCounters.length; k++) {
 		var counter = NeMV.Tags.TAC.KillCounters[k];
 		if (enemy.hasTag(counter.tag)) counter.inc();
 	}
-	NeMV.Tags.TAC.Game_Enemy_makeDropItems.call(this);
+	return NeMV.Tags.TAC.Game_Enemy_makeDropItems.call(this);
 };
 
 NeMV.Tags.TAC.Game_Battler_useItem = Game_Battler.prototype.useItem;
