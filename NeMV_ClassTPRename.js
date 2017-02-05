@@ -11,7 +11,7 @@ NeMV.CTPR = NeMV.CTPR || {};
 
 //=============================================================================
  /*:
- * @plugindesc v1.3 Allows classes to customize their HP/MP/TP displays.
+ * @plugindesc v1.3.2 Allows classes to customize their HP/MP/TP displays.
  * @author Nekoyoubi
  *
  * @help
@@ -62,6 +62,9 @@ NeMV.CTPR = NeMV.CTPR || {};
  * ============================================================================
  * Changelog
  * ============================================================================
+ *
+ * Version 1.3.2:
+ * - removed the use of $gameClasses, since new RMMV scripts removed it
  *
  * Version 1.3.1:
  * - even better integration with YEP - Skill Core (bar swapping fix)
@@ -228,7 +231,7 @@ Window_BattleLog.prototype.makeHpDamageText = function(target) {
     var result = target.result();
     var damage = result.hpDamage;
     var isActor = target.isActor();
-	var hpText = isActor ? $gameClasses[target.actor()._classId].hpRename : TextManager.hp;
+	var hpText = isActor ? $dataClasses[target.actor()._classId+1].hpRename : TextManager.hp;
     var fmt;
     if (damage > 0 && result.drain) {
         fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
@@ -249,7 +252,7 @@ Window_BattleLog.prototype.makeMpDamageText = function(target) {
     var result = target.result();
     var damage = result.mpDamage;
     var isActor = target.isActor();
-	var mpText = isActor ? $gameClasses[target.actor()._classId].mpRename : TextManager.mp;
+	var mpText = isActor ? $dataClasses[target.actor()._classId+1].mpRename : TextManager.mp;
     var fmt;
     if (damage > 0 && result.drain) {
         fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
@@ -269,7 +272,7 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
     var result = target.result();
     var damage = result.tpDamage;
     var isActor = target.isActor();
-	var tpText = isActor ? $gameClasses[target.actor()._classId].tpRename : TextManager.tp;
+	var tpText = isActor ? $dataClasses[target.actor()._classId+1].tpRename : TextManager.tp;
     var fmt;
     if (damage > 0) {
         fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
