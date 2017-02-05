@@ -234,7 +234,7 @@ Window_BattleLog.prototype.makeHpDamageText = function(target) {
 	var hpText = TextManager.hp;
 	if (isActor)
 		for (var aci = 0; aci < $dataClasses.length; aci++)
-			if ($dataClasses[aci].id == target.actor()._classId)
+			if ($dataClasses[aci] != null && $dataClasses[aci].id == target.actor()._classId)
 				hpText = $dataClasses[aci].hpRename;
     var fmt;
     if (damage > 0 && result.drain) {
@@ -259,7 +259,7 @@ Window_BattleLog.prototype.makeMpDamageText = function(target) {
 	var mpText = TextManager.mp;
 	if (isActor)
 		for (var aci = 0; aci < $dataClasses.length; aci++)
-			if ($dataClasses[aci].id == target.actor()._classId)
+			if ($dataClasses[aci] != null && $dataClasses[aci].id == target.actor()._classId)
 				mpText = $dataClasses[aci].mpRename;
     var fmt;
     if (damage > 0 && result.drain) {
@@ -283,7 +283,7 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
 	var tpText = TextManager.tp;
 	if (isActor)
 		for (var aci = 0; aci < $dataClasses.length; aci++)
-			if ($dataClasses[aci].id == target.actor()._classId)
+			if ($dataClasses[aci] != null && $dataClasses[aci].id == target.actor()._classId)
 				tpText = $dataClasses[aci].tpRename;
     var fmt;
     if (damage > 0) {
