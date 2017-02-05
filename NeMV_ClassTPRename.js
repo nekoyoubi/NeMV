@@ -231,7 +231,11 @@ Window_BattleLog.prototype.makeHpDamageText = function(target) {
     var result = target.result();
     var damage = result.hpDamage;
     var isActor = target.isActor();
-	var hpText = isActor ? $dataClasses[target.actor()._classId+1].hpRename : TextManager.hp;
+	var hpText = TextManager.hp;
+	if (isActor)
+		for (var aci = 0; aci < $dataClasses.length; aci++)
+			if ($dataClasses[aci].id == target.actor()._classId)
+				hpText = $dataClasses[aci].hpRename;
     var fmt;
     if (damage > 0 && result.drain) {
         fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
@@ -252,7 +256,11 @@ Window_BattleLog.prototype.makeMpDamageText = function(target) {
     var result = target.result();
     var damage = result.mpDamage;
     var isActor = target.isActor();
-	var mpText = isActor ? $dataClasses[target.actor()._classId+1].mpRename : TextManager.mp;
+	var mpText = TextManager.mp;
+	if (isActor)
+		for (var aci = 0; aci < $dataClasses.length; aci++)
+			if ($dataClasses[aci].id == target.actor()._classId)
+				mpText = $dataClasses[aci].mpRename;
     var fmt;
     if (damage > 0 && result.drain) {
         fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
@@ -272,7 +280,11 @@ Window_BattleLog.prototype.makeTpDamageText = function(target) {
     var result = target.result();
     var damage = result.tpDamage;
     var isActor = target.isActor();
-	var tpText = isActor ? $dataClasses[target.actor()._classId+1].tpRename : TextManager.tp;
+	var tpText = TextManager.tp;
+	if (isActor)
+		for (var aci = 0; aci < $dataClasses.length; aci++)
+			if ($dataClasses[aci].id == target.actor()._classId)
+				tpText = $dataClasses[aci].tpRename;
     var fmt;
     if (damage > 0) {
         fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
